@@ -4,7 +4,7 @@ import idautils
 import ida_bytes
 import ida_nalt
 
-import json
+import json,functools
 
 text_start=idaapi.get_imagebase()
 text_end=idaapi.inf_get_max_ea()
@@ -38,26 +38,48 @@ def get_switch_table(switch_address):
         switch_table.append({'case':i+lowcase,'start':startea,'end':endea})
     return switch_table
 
-def get_opcode(sig,name):
-    ea=aob(sig)
+def get_switch_case(ea):
+    maybe = []
     if(is_switch(ea)):
-        for case in switch_table:
-            if(ea>=case['start'] and ea<=case['end']):
-                print(f'Opcode 0x{case["case"]:x}({case["case"]}): {name}')
-        return
+        maybe = [case["case"] for case in switch_table if(ea>=case['start'] and ea<=case['end'])]
+    return maybe
+
+opcodes={}
+def get_opcode(ea,name):
+    maybe = get_switch_case(ea)
+    if(len(maybe)>0):
+        if(len(maybe)>1):print(f'{name} Double Case')
+        for op in maybe:
+            print(f'Opcode 0x{op:03x}({op:03d}): {name} {"?(Double Case)"if(len(maybe)>1)else "?(Double Xref)"if(name in opcodes)else""}')
+            if(name not in opcodes)opcodes[name]=op
+        return True
+    else:
+        return False
+
+def get_opcode_from_addr(ea,name):
     func=idaapi.get_func(ea)
     if(func):ea=func.start_ea
-    xrefs=idautils.XrefsTo(ea, flags=1)
-    xrefs=[xref.frm for xref in xrefs if is_switch(xref.frm)]
-    if(len(xrefs)>1):
-        print(f"Double xref {name}")
-    elif(len(xrefs)<1):
-        print(f"Not found   {name}")
+    xrefs_all=list(idautils.XrefsTo(ea, flags=1))
+    if(len(xrefs_all)<=0):
+        return False
+    xrefs=[xref.frm for xref in xrefs_all if is_switch(xref.frm)]
+    if(len(xrefs)<1):
+        if(functools.reduce(lambda a,b:a or b,[get_opcode_from_addr(xref.frm,name) for xref in xrefs_all])):
+            return True
+        else:
+            return False
     else:
-        xref=xrefs[0]
-        for case in switch_table:
-            if(xref>=case['start']and xref<=case['end']):
-                print(f'Opcode 0x{case["case"]:x}({case["case"]}): {name}')
+        ea=xrefs[0]
+        return get_opcode(ea,name)
+
+def get_opcode_from_sig(sig,name):
+    ea=aob(sig)
+    #in_swich
+    if(get_opcode(ea,name)):
+        return True
+    if(get_opcode_from_addr(ea,name)):
+        return True
+    return False
 
 def is_switch(ea):
     if(ea>switch_func.start_ea and ea<switch_func.end_ea):
@@ -72,7 +94,8 @@ switch_address = find_next_insn(aob(signature['ProcessZonePacketDown']),'jmp')
 switch_table   = get_switch_table(switch_address)
 
 
-for sig in signature['opcodes']:
-    get_opcode(signature['opcodes'][sig],sig)
-
+for sig_name in signature['opcodes']:
+    if(not get_opcode_from_sig(signature['opcodes'][sig_name],sig_name)):
+        print(f"Cannot found {sig_name}")
+print(opcodes)
 print('All Opcode from Signature Found')
