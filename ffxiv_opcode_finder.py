@@ -43,10 +43,12 @@ def get_opcode(sig,name):
     if(is_switch(ea)):
         for case in switch_table:
             if(ea>=case['start'] and ea<=case['end']):
-                print(f'Opcode {case["case"]}: {name}')
+                print(f'Opcode 0x{case["case"]:x}({case["case"]}): {name}')
         return
+    func=idaapi.get_func(ea)
+    if(func):ea=func.start_ea
     xrefs=idautils.XrefsTo(ea, flags=1)
-    xrefs=[xref.frm for xref in xrefs if is_switch(xref.frm) and xref.iscode==1]
+    xrefs=[xref.frm for xref in xrefs if is_switch(xref.frm)]
     if(len(xrefs)>1):
         print(f"Double xref {name}")
     elif(len(xrefs)<1):
