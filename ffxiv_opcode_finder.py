@@ -11,9 +11,9 @@ text_end=idaapi.inf_get_max_ea()
 def find_next_insn(ea,insn):
     while ea!=-1:
         if idc.print_insn_mnem(ea) == insn:
-            #print("0x%x"%ea)
             return ea
         ea=next_head(ea)
+
 def aob(pattern):
     address = idc.find_binary(text_start,SEARCH_DOWN,pattern)
     return address
@@ -36,7 +36,7 @@ def get_switch_table(switch_address):
         endea = find_next_insn(startea,'jmp')
         print(f"case 0x{i+lowcase:x}: table@{table_entry:x} jmp@{startea:x} - {endea:x}")
         switch_table.append({'case':i+lowcase,'start':startea,'end':endea})
-    return switch_table
+    return switch_table,switch_func
 
 def get_switch_case(ea):
     maybe = []
@@ -51,7 +51,7 @@ def get_opcode(ea,name):
         if(len(maybe)>1):print(f'{name} Double Case')
         for op in maybe:
             print(f'Opcode 0x{op:03x}({op:03d}): {name} {"?(Double Case)"if(len(maybe)>1)else "?(Double Xref)"if(name in opcodes)else""}')
-            if(name not in opcodes)opcodes[name]=op
+            if(name not in opcodes): opcodes[name]=op
         return True
     else:
         return False
@@ -91,8 +91,7 @@ with open(datafile) as f:
     signature = json.load(f)
 
 switch_address = find_next_insn(aob(signature['ProcessZonePacketDown']),'jmp')
-switch_table   = get_switch_table(switch_address)
-
+switch_table,switch_func = get_switch_table(switch_address)
 
 for sig_name in signature['opcodes']:
     if(not get_opcode_from_sig(signature['opcodes'][sig_name],sig_name)):
