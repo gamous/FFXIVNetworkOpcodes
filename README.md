@@ -1,4 +1,4 @@
-# FFXIVNetworkOpcode
+# FFXIVNetworkOpcodes
 
 ## ffxiv_opcode_finder.py
 
