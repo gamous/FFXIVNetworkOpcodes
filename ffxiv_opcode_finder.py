@@ -87,7 +87,8 @@ def is_switch(ea):
     return False
 
 datafile=os.path.join(os.path.dirname(os.path.realpath(__file__)), "opcode_sig.json")
-with open(datafile) as f:
+resultfile=os.path.join(os.path.dirname(os.path.realpath(__file__)), "opcode.json")
+with open(datafile,'r') as f:
     signature = json.load(f)
 
 switch_address = find_next_insn(aob(signature['ProcessZonePacketDown']),'jmp')
@@ -98,3 +99,6 @@ for sig_name in signature['opcodes']:
         print(f"Cannot found {sig_name}")
 print(opcodes)
 print('All Opcode from Signature Found')
+
+with open(resultfile,'w+') as f:
+    json.dump(opcodes,f)
