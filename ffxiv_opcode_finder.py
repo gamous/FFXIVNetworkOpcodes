@@ -30,6 +30,22 @@ def find_prev_insn(ea, insn, step=10):
     return idc.BADADDR
 
 
+def find_prev_ctrl(cea, up):
+    while cea > up:
+        if idc.print_insn_mnem(cea) in ["jmp", "jz", "ja", "jb", "call", "ret", "retn"]:
+            return cea
+        cea = idc.prev_head(cea)
+    return up
+
+
+def find_next_ctrl(cea, down):
+    while cea < down:
+        if idc.print_insn_mnem(cea) in ["jmp", "jz", "ja", "jb", "call", "ret", "retn"]:
+            return cea
+        cea = idc.next_head(cea)
+    return down
+
+
 def aob(pattern):
     address = idc.find_binary(text_start, SEARCH_DOWN, pattern)
     return address
@@ -145,10 +161,12 @@ client_opcodes = {}
 
 
 def add_send_opcode(start, end, op):
+    global send_table
     print(f"Opcode 0x{op:03x}({op:03d}) @{start:x} - {end:x}")
     if str(op) in send_table:
-        send_table[str(op)].append((start, end))
-    send_table[str(op)] = [(start, end)]
+        send_table[str(op)] += [(start, end)]
+    else:
+        send_table[str(op)] = [(start, end)]
 
 
 def init_send_table(ea):
@@ -184,8 +202,11 @@ def init_send_table(ea):
                 if op == "":
                     return
                 op = int(op, 16)
-                # todo: replace call_ea as next jmp/jz/call/...
-                add_send_opcode(ea, call_ea, op)
+                add_send_opcode(
+                    find_prev_ctrl(ea, func.start_ea),
+                    find_next_ctrl(ea, func.end_ea),
+                    op,
+                )
             ea = idc.prev_head(ea)
         return
     else:
@@ -205,6 +226,7 @@ def get_send_from_sig(sig, name):
         for r in ranges:
             if ea > r[0] and ea < r[1]:
                 maybe.append(int(op))
+    maybe = list(set(maybe))
     if len(maybe) > 0:
         if len(maybe) > 1:
             if name not in error_opcodes["DoublePath"]:
