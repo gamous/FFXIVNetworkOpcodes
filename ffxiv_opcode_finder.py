@@ -143,8 +143,8 @@ def get_opcode_from_addr(ea, name):
         return get_opcode(ea, name)
 
 
-def get_opcode_from_sig(sig, name):
-    ea = aob(sig)
+def get_opcode_from_sig(sig, name, offset=0):
+    ea = aob(sig) + offset
     # in_swich
     if get_opcode(ea, name):
         return True
@@ -219,8 +219,10 @@ def init_send_table(ea):
         return
 
 
-def get_send_from_sig(sig, name):
-    ea = aob(sig)
+def get_send_from_sig(sig, name, offset=0):
+    ea = aob(sig) + offset
+    if offset > 0:
+        print(ea)
     maybe = []
     for op in send_table:
         ranges = send_table[op]
@@ -244,10 +246,20 @@ def get_send_from_sig(sig, name):
 
 
 ###
-datafile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "signatures.json")
-resultfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "opcodes.json")
-errorfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "errors.json")
-dumpfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dump.json")
+isCN = False
+datafile = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    f"signatures{'_cn'if isCN else ''}.json",
+)
+resultfile = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), f"opcodes{'_cn'if isCN else ''}.json"
+)
+errorfile = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), f"errors{'_cn'if isCN else ''}.json"
+)
+dumpfile = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), f"dump{'_cn'if isCN else ''}.json"
+)
 
 with open(datafile, "r") as f:
     signature = json.load(f)
@@ -255,21 +267,27 @@ with open(datafile, "r") as f:
 packet_down = aob(signature["ProcessZonePacketDown"])
 packet_up = aob(signature["ProcessZonePacketUp"])
 
-# switch_address = find_next_insn(packet_down, "jmp")
-# switch_func = idaapi.get_func(switch_address)
-# init_switch_table(switch_address)
+switch_address = find_next_insn(packet_down, "jmp")
+switch_func = idaapi.get_func(switch_address)
+init_switch_table(switch_address)
 init_send_table(packet_up)
 for op in send_table:
     print(f"Opcode 0x{int(op):03x}({int(op):03d}): {send_table[(str(op))]}")
 
 
-# for sig_name in signature["ServerZoneIpcType"]:
-#    if not get_opcode_from_sig(signature["ServerZoneIpcType"][sig_name], sig_name):
-#        print(f"Cannot found {sig_name}")
-#        error_opcodes["NotFound"][sig_name] = []
-#
+for sig_name in signature["ServerZoneIpcType"]:
+    if not get_opcode_from_sig(signature["ServerZoneIpcType"][sig_name], sig_name):
+        print(f"Cannot found {sig_name}")
+        error_opcodes["NotFound"][sig_name] = []
+
 for sig_name in signature["ClientZoneIpcType"]:
-    if not get_send_from_sig(signature["ClientZoneIpcType"][sig_name], sig_name):
+    offset = 0
+    if sig_name in signature["Offset"]:
+        offset = signature["Offset"][sig_name]
+        print(f"offset {offset}")
+    if not get_send_from_sig(
+        signature["ClientZoneIpcType"][sig_name], sig_name, offset
+    ):
         print(f"Cannot found {sig_name}")
         error_opcodes["NotFound"][sig_name] = []
 
