@@ -64,6 +64,8 @@
     },
     "ClientZoneIpcType": {
         "ActionRequest": "45 33 C0 48 C7 44 24 ? ? ? ? ? 40 88 74 24 ?",
+        "ActionRequestGroundTargeted": "66 89 44 24 4C F3 0F 11 4C 24 54 F3 0F 11 44 24 58",
+        "ChatHandler": "8B 44 24 40 48 8D 8D ? ? ? ? 0F 10 44 24 ?",
         "ClientTrigger ": "8B 84 24 ? ? ? ? 48 8D 54 24 ? 45 33 C9 89 44 24 50 45 33 C0 C7 44 24 ? ? ? ? ? 48 C7 44 24 ? ? ? ? ? 89 6C 24 40 89 74 24 44 89 7C 24 48 89 5C 24 4C 48 C7 44 24 ? ? ? ? ?",
         "InventoryModifyHandler": "48 89 54 24 ? 45 33 C9 48 89 54 24 ?",
         "MarketBoardPurchaseHandler": "0F B7 83 ? ? ? ? 48 89 54 24 ? ",
