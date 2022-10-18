@@ -236,6 +236,30 @@
             {
                 "name":"ActionRequest",
                 "opcode":105
+            },
+            {
+                "name":"ClientTrigger ",
+                "opcode":442
+            },
+            {
+                "name":"InventoryModifyHandler",
+                "opcode":313
+            },
+            {
+                "name":"MarketBoardPurchaseHandler",
+                "opcode":155
+            },
+            {
+                "name":"SetSearchInfoHandler",
+                "opcode":181
+            },
+            {
+                "name":"UpdatePositionHandler",
+                "opcode":328
+            },
+            {
+                "name":"UpdatePositionInstance",
+                "opcode":743
             }
         ]
     }

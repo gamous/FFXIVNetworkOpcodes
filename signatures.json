@@ -62,7 +62,13 @@
         "FateInfo": "E8 ? ? ? ? E9 ? ? ? ? 0F B7 4E 10 48 8D 56 12 41 B8 ? ? ? ?",
         "EnvironmentControl": "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3"
     },
-    "ClientZoneIpcType":{
-        "ActionRequest": "45 33 C0 48 C7 44 24 ? ? ? ? ? 40 88 74 24 ?"
+    "ClientZoneIpcType": {
+        "ActionRequest": "45 33 C0 48 C7 44 24 ? ? ? ? ? 40 88 74 24 ?",
+        "ClientTrigger ": "8B 84 24 ? ? ? ? 48 8D 54 24 ? 45 33 C9 89 44 24 50 45 33 C0 C7 44 24 ? ? ? ? ? 48 C7 44 24 ? ? ? ? ? 89 6C 24 40 89 74 24 44 89 7C 24 48 89 5C 24 4C 48 C7 44 24 ? ? ? ? ?",
+        "InventoryModifyHandler": "48 89 54 24 ? 45 33 C9 48 89 54 24 ?",
+        "MarketBoardPurchaseHandler": "0F B7 83 ? ? ? ? 48 89 54 24 ? ",
+        "SetSearchInfoHandler": "0F 11 41 80 0F 10 43 32 ",
+        "UpdatePositionHandler": "F7 D9 48 C7 44 24 ? ? ? ? ?",
+        "UpdatePositionInstance": "44 8B CE 0F 11 44 24 ?"
     }
 }
