@@ -1,5 +1,17 @@
 {
-    "NotFound":{},
+    "NotFound":{
+        "ContentFinderNotifyPop":[],
+        "EventFinish":[],
+        "EventStart":[],
+        "Examine":[],
+        "ExamineSearchInfo":[],
+        "InitZone":[],
+        "InventoryActionAck":[],
+        "PrepareZoning":[],
+        "UpdateClassInfo":[],
+        "Logout":[],
+        "FateInfo":[]
+    },
     "DoubleCase":{},
     "DoubleXref":{},
     "DoublePath":{}
