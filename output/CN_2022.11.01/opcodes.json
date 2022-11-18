@@ -1,5 +1,5 @@
 {
-    "version":"2022_11_01",
+    "version":"2022.11.01",
     "region":"CN",
     "lists":{
         "ServerZoneIpcType":[
@@ -56,8 +56,8 @@
                 "opcode":313
             },
             {
-                "name":"HousingWardInfo",
-                "opcode":198
+                "name":"CFPreferredRole",
+                "opcode":158
             },
             {
                 "name":"CompanyAirshipStatus",
@@ -72,8 +72,76 @@
                 "opcode":539
             },
             {
+                "name":"EffectResult",
+                "opcode":661
+            },
+            {
+                "name":"EffectResult4",
+                "opcode":239
+            },
+            {
+                "name":"EffectResult8",
+                "opcode":424
+            },
+            {
+                "name":"EffectResult16",
+                "opcode":627
+            },
+            {
+                "name":"EffectResultBasic",
+                "opcode":266
+            },
+            {
+                "name":"EffectResultBasic4",
+                "opcode":816
+            },
+            {
+                "name":"EffectResultBasic8",
+                "opcode":999
+            },
+            {
+                "name":"EffectResultBasic16",
+                "opcode":785
+            },
+            {
+                "name":"EffectResultBasic32",
+                "opcode":692
+            },
+            {
+                "name":"EffectResultBasic64",
+                "opcode":251
+            },
+            {
+                "name":"EventFinish",
+                "opcode":769
+            },
+            {
+                "name":"EventPlay",
+                "opcode":257
+            },
+            {
+                "name":"EventPlay4",
+                "opcode":173
+            },
+            {
+                "name":"EventStart",
+                "opcode":869
+            },
+            {
+                "name":"Examine",
+                "opcode":898
+            },
+            {
                 "name":"ExamineSearchInfo",
                 "opcode":893
+            },
+            {
+                "name":"InitZone",
+                "opcode":623
+            },
+            {
+                "name":"InventoryActionAck",
+                "opcode":954
             },
             {
                 "name":"MarketBoardItemListing",
@@ -124,6 +192,18 @@
                 "opcode":798
             },
             {
+                "name":"Playtime",
+                "opcode":450
+            },
+            {
+                "name":"PrepareZoning",
+                "opcode":391
+            },
+            {
+                "name":"SystemLogMessage",
+                "opcode":516
+            },
+            {
                 "name":"StatusEffectList",
                 "opcode":840
             },
@@ -134,6 +214,10 @@
             {
                 "name":"StatusEffectList3",
                 "opcode":340
+            },
+            {
+                "name":"UpdateClassInfo",
+                "opcode":694
             },
             {
                 "name":"UpdateHpMpTp",
@@ -156,6 +240,10 @@
                 "opcode":410
             },
             {
+                "name":"Logout",
+                "opcode":574
+            },
+            {
                 "name":"MarketBoardPurchase",
                 "opcode":758
             },
@@ -166,6 +254,10 @@
             {
                 "name":"AirshipStatus",
                 "opcode":850
+            },
+            {
+                "name":"SubmarineProgressionStatus",
+                "opcode":425
             },
             {
                 "name":"SubmarineStatusList",
@@ -188,52 +280,24 @@
                 "opcode":737
             },
             {
+                "name":"FateInfo",
+                "opcode":122
+            },
+            {
                 "name":"EnvironmentControl",
                 "opcode":443
             },
             {
-                "name":"EffectResult",
-                "opcode":661
+                "name":"UpdateRecastTimes",
+                "opcode":924
             },
             {
-                "name":"EffectResult4",
-                "opcode":239
+                "name":"UpdateHate",
+                "opcode":174
             },
             {
-                "name":"EffectResult8",
-                "opcode":424
-            },
-            {
-                "name":"EffectResult16",
-                "opcode":627
-            },
-            {
-                "name":"EffectResultBasic",
-                "opcode":266
-            },
-            {
-                "name":"EffectResultBasic4",
-                "opcode":816
-            },
-            {
-                "name":"EffectResultBasic8",
-                "opcode":999
-            },
-            {
-                "name":"EffectResultBasic16",
-                "opcode":785
-            },
-            {
-                "name":"EffectResultBasic32",
-                "opcode":692
-            },
-            {
-                "name":"EffectResultBasic64",
-                "opcode":251
-            },
-            {
-                "name":"SystemLogMessage",
-                "opcode":516
+                "name":"UpdateHater",
+                "opcode":566
             }
         ],
         "ClientZoneIpcType":[
@@ -255,6 +319,10 @@
             },
             {
                 "name":"InventoryModifyHandler",
+                "opcode":142
+            },
+            {
+                "name":"InventoryHandlerOffset",
                 "opcode":142
             },
             {

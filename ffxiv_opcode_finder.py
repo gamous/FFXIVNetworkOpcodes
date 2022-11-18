@@ -35,12 +35,13 @@ for s in slist_s:
         break
 for s in slist_s:
     if r"/*****ff14******rev" in s:
-        BuildID = s[27:37].replace('/', '_')
+        BuildID = s[27:37].replace('/', '.')
         break
 print(f"{ServerType}_{BuildID}")
 
 errors = {
     "SigNotFound": [],
+    "IndexFailed": [],
     "FuncNotFound": [],
     "ArgvNotFound": [],
     "DoubleCase": {},
@@ -337,12 +338,10 @@ class ServerZoneIpcType:
         else:
             return False
 
-    def find_in_table(self, ea, name):
+    def find_in_table_process(self, ea, name):
         func = idaapi.get_func(ea)
         if func:
             ea = func.start_ea
-        if self.table.in_switch(ea):
-            return self.find_in_table_result(ea, name)
         xrefs_all = list(idautils.XrefsTo(ea, flags=1))
         if len(xrefs_all) <= 0:
             return False
@@ -350,7 +349,7 @@ class ServerZoneIpcType:
         if len(xrefs) < 1:
             if functools.reduce(
                 lambda a, b: a or b,
-                [self.find_in_table(xref.frm, name) for xref in xrefs_all],
+                [self.find_in_table_process(xref.frm, name) for xref in xrefs_all],
             ):
                 return True
             else:
@@ -358,6 +357,15 @@ class ServerZoneIpcType:
         else:
             ea = xrefs[0]
             return self.find_in_table_result(ea, name)
+
+    def find_in_table(self, ea, name):
+        if self.find_in_table_result(ea, name):
+            return True
+        if self.find_in_table_process(ea, name):
+            return True
+        print(f"{name} NotFound")
+        errors["IndexFailed"].append(name)
+        return False
 
 
 class ClientZoneIpcType:
@@ -385,6 +393,8 @@ class ClientZoneIpcType:
                     self.content[name] = op
             return True
         else:
+            print(f"{name} NotFound")
+            errors["IndexFailed"].append(name)
             return False
 
 
