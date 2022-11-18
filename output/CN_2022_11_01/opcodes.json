@@ -1,225 +1,273 @@
 {
-    "version":"6.25",
-    "region":"Global",
+    "version":"2022_11_01",
+    "region":"CN",
     "lists":{
         "ServerZoneIpcType":[
             {
                 "name":"ActorCast",
-                "opcode":748
+                "opcode":358
             },
             {
                 "name":"ActorControl",
-                "opcode":926
+                "opcode":228
             },
             {
                 "name":"ActorControlSelf",
-                "opcode":974
+                "opcode":293
             },
             {
                 "name":"ActorControlTarget",
-                "opcode":708
+                "opcode":675
             },
             {
                 "name":"ActorGauge",
-                "opcode":836
+                "opcode":904
             },
             {
                 "name":"ActorMove",
-                "opcode":629
+                "opcode":873
             },
             {
                 "name":"ActorSetPos",
-                "opcode":655
+                "opcode":389
             },
             {
                 "name":"Effect",
-                "opcode":964
+                "opcode":685
             },
             {
                 "name":"AoeEffect8",
-                "opcode":913
+                "opcode":454
             },
             {
                 "name":"AoeEffect16",
-                "opcode":740
+                "opcode":405
             },
             {
                 "name":"AoeEffect24",
-                "opcode":751
-            },
-            {
-                "name":"AoeEffect32",
-                "opcode":953
-            },
-            {
-                "name":"BossStatusEffectList",
-                "opcode":707
-            },
-            {
-                "name":"CompanyAirshipStatus",
-                "opcode":756
-            },
-            {
-                "name":"CompanySubmersibleStatus",
                 "opcode":260
             },
             {
+                "name":"AoeEffect32",
+                "opcode":765
+            },
+            {
+                "name":"BossStatusEffectList",
+                "opcode":313
+            },
+            {
+                "name":"HousingWardInfo",
+                "opcode":198
+            },
+            {
+                "name":"CompanyAirshipStatus",
+                "opcode":421
+            },
+            {
+                "name":"CompanySubmersibleStatus",
+                "opcode":274
+            },
+            {
+                "name":"ContentFinderNotifyPop",
+                "opcode":539
+            },
+            {
+                "name":"ExamineSearchInfo",
+                "opcode":893
+            },
+            {
                 "name":"MarketBoardItemListing",
-                "opcode":935
+                "opcode":360
             },
             {
                 "name":"MarketBoardItemListingCount",
-                "opcode":759
+                "opcode":428
             },
             {
                 "name":"MarketBoardItemListingHistory",
-                "opcode":950
+                "opcode":596
             },
             {
                 "name":"MarketBoardSearchResult",
-                "opcode":832
+                "opcode":625
             },
             {
                 "name":"NpcSpawn",
-                "opcode":669
+                "opcode":841
             },
             {
                 "name":"NpcSpawn2",
-                "opcode":907
+                "opcode":402
             },
             {
                 "name":"ObjectSpawn",
-                "opcode":729
+                "opcode":131
             },
             {
                 "name":"PlaceFieldMarker",
-                "opcode":997
+                "opcode":121
             },
             {
                 "name":"PlaceFieldMarkerPreset",
-                "opcode":738
+                "opcode":189
             },
             {
                 "name":"PlayerSetup",
-                "opcode":713
+                "opcode":877
             },
             {
                 "name":"PlayerSpawn",
-                "opcode":382
+                "opcode":544
             },
             {
                 "name":"PlayerStats",
-                "opcode":451
-            },
-            {
-                "name":"Playtime",
-                "opcode":524
+                "opcode":798
             },
             {
                 "name":"StatusEffectList",
-                "opcode":628
+                "opcode":840
             },
             {
                 "name":"StatusEffectList2",
-                "opcode":608
+                "opcode":216
             },
             {
                 "name":"StatusEffectList3",
-                "opcode":976
+                "opcode":340
             },
             {
                 "name":"UpdateHpMpTp",
-                "opcode":297
+                "opcode":111
             },
             {
                 "name":"UpdateInventorySlot",
-                "opcode":890
+                "opcode":462
             },
             {
                 "name":"UpdateSearchInfo",
-                "opcode":420
+                "opcode":889
             },
             {
                 "name":"WardLandInfo",
-                "opcode":127
+                "opcode":198
             },
             {
                 "name":"CEDirector",
-                "opcode":507
+                "opcode":410
             },
             {
                 "name":"MarketBoardPurchase",
-                "opcode":835
+                "opcode":758
             },
             {
                 "name":"AirshipStatusList",
-                "opcode":192
+                "opcode":817
             },
             {
                 "name":"AirshipStatus",
-                "opcode":674
+                "opcode":850
             },
             {
                 "name":"SubmarineStatusList",
-                "opcode":337
+                "opcode":500
             },
             {
                 "name":"FreeCompanyInfo",
-                "opcode":875
+                "opcode":403
             },
             {
                 "name":"AirshipExplorationResult",
-                "opcode":905
+                "opcode":289
             },
             {
                 "name":"SubmarineExplorationResult",
-                "opcode":132
+                "opcode":425
             },
             {
                 "name":"FreeCompanyDialog",
-                "opcode":983
+                "opcode":737
             },
             {
                 "name":"EnvironmentControl",
-                "opcode":421
+                "opcode":443
+            },
+            {
+                "name":"EffectResult1",
+                "opcode":661
+            },
+            {
+                "name":"EffectResult4",
+                "opcode":239
+            },
+            {
+                "name":"EffectResult8",
+                "opcode":424
+            },
+            {
+                "name":"EffectResult16",
+                "opcode":627
+            },
+            {
+                "name":"EffectResultBasic1",
+                "opcode":266
+            },
+            {
+                "name":"EffectResultBasic4",
+                "opcode":816
+            },
+            {
+                "name":"EffectResultBasic8",
+                "opcode":999
+            },
+            {
+                "name":"EffectResultBasic16",
+                "opcode":785
+            },
+            {
+                "name":"EffectResultBasic32",
+                "opcode":692
+            },
+            {
+                "name":"EffectResultBasic64",
+                "opcode":251
             }
         ],
         "ClientZoneIpcType":[
             {
                 "name":"ActionRequest",
-                "opcode":320
+                "opcode":736
             },
             {
                 "name":"ActionRequestGroundTargeted",
-                "opcode":523
-            },
-            {
-                "name":"ChatHandler",
-                "opcode":818
-            },
-            {
-                "name":"ClientTrigger ",
-                "opcode":361
-            },
-            {
-                "name":"InventoryModifyHandler",
-                "opcode":226
-            },
-            {
-                "name":"MarketBoardPurchaseHandler",
-                "opcode":141
-            },
-            {
-                "name":"SetSearchInfoHandler",
-                "opcode":267
-            },
-            {
-                "name":"UpdatePositionHandler",
                 "opcode":603
             },
             {
+                "name":"ChatHandler",
+                "opcode":940
+            },
+            {
+                "name":"ClientTrigger ",
+                "opcode":177
+            },
+            {
+                "name":"InventoryModifyHandler",
+                "opcode":142
+            },
+            {
+                "name":"MarketBoardPurchaseHandler",
+                "opcode":464
+            },
+            {
+                "name":"SetSearchInfoHandler",
+                "opcode":636
+            },
+            {
+                "name":"UpdatePositionHandler",
+                "opcode":337
+            },
+            {
                 "name":"UpdatePositionInstance",
-                "opcode":532
+                "opcode":213
             }
         ]
     }
