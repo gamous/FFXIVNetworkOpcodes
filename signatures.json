@@ -1,9 +1,13 @@
 {
-    "Version": "6.25",
-    "Region": "Global",
-    "ProcessZonePacketDown": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
-    "ProcessZonePacketUp": "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 70 8B 81 ?? ?? ?? ??",
     "ServerZoneIpcType": {
+        "__init__": {
+            "ProcessZonePacketDown": {
+                "Global": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
+                "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
+            },
+            "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 51",
+            "EffectResultBasic": "48 83 EC ?? 45 0F B7 D0 41 81 FA ?? ?? ?? ?? 77 ??"
+        },
         "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
         "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
         "ActorControlSelf": "0F 95 C2 E8 ? ? ? ? 0F B7 17",
@@ -17,6 +21,8 @@
         "AoeEffect24": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 F0 06 00 00",
         "AoeEffect32": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 30 09 00 00",
         "BossStatusEffectList": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 F0",
+        "CFPreferredRole": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8D 4E 10 E8 ? ? ? ? E9 ? ? ? ?",
+        "HousingWardInfo": "40 55 57 41 54 41 56 41 57 48 8D AC 24 C0 E2 FF FF",
         "CompanyAirshipStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 40 48 85 C9 74 ? BA ? ? ? ?",
         "CompanySubmersibleStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 48 48 85 C9 74 ?",
         "ContentFinderNotifyPop": "40 53 57 48 83 EC ? 48 8B D9 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F8",
@@ -59,9 +65,52 @@
         "SubmarineExplorationResult": "0F 85 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 81 C1 ? ? ? ?",
         "FreeCompanyDialog": "48 89 5C 24 18 48 89 74 24 20 57 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 A0 0F 00 00",
         "FateInfo": "E8 ? ? ? ? E9 ? ? ? ? 0F B7 4E 10 48 8D 56 12 41 B8 ? ? ? ?",
-        "EnvironmentControl": "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3"
+        "EnvironmentControl": "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3",
+        "EffectResult1": {
+            "Function": "EffectResult",
+            "Param": 96
+        },
+        "EffectResult4": {
+            "Function": "EffectResult",
+            "Param": 360
+        },
+        "EffectResult8": {
+            "Function": "EffectResult",
+            "Param": 712
+        },
+        "EffectResult16": {
+            "Function": "EffectResult",
+            "Param": 1416
+        },
+        "EffectResultBasic1": {
+            "Function": "EffectResultBasic",
+            "Param": 24
+        },
+        "EffectResultBasic4": {
+            "Function": "EffectResultBasic",
+            "Param": 72
+        },
+        "EffectResultBasic8": {
+            "Function": "EffectResultBasic",
+            "Param": 136
+        },
+        "EffectResultBasic16": {
+            "Function": "EffectResultBasic",
+            "Param": 264
+        },
+        "EffectResultBasic32": {
+            "Function": "EffectResultBasic",
+            "Param": 520
+        },
+        "EffectResultBasic64": {
+            "Function": "EffectResultBasic",
+            "Param": 1032
+        }
     },
     "ClientZoneIpcType": {
+        "__init__": {
+            "ProcessZonePacketUp": "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 70 8B 81 ?? ?? ?? ??"
+        },
         "ActionRequest": "45 33 C0 48 C7 44 24 ? ? ? ? ? 40 88 74 24 ?",
         "ActionRequestGroundTargeted": "66 89 44 24 4C F3 0F 11 4C 24 54 F3 0F 11 44 24 58",
         "ChatHandler": "8B 44 24 40 48 8D 8D ? ? ? ? 0F 10 44 24 ?",
@@ -71,6 +120,5 @@
         "SetSearchInfoHandler": "0F 11 41 80 0F 10 43 32 ",
         "UpdatePositionHandler": "F7 D9 48 C7 44 24 ? ? ? ? ?",
         "UpdatePositionInstance": "44 8B CE 0F 11 44 24 ?"
-    },
-    "Offset": {}
+    }
 }

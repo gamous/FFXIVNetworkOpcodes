@@ -3,22 +3,78 @@ import idc
 import idautils
 import ida_bytes
 import ida_nalt
-
+import ida_search
+import ida_ua
 import os
 import json
 import functools
+import re
 
-text_start = idaapi.get_imagebase()
-text_end = idaapi.inf_get_max_ea()
+ServerType = "Global"
+BuildID = "Unknown"
+ConfigPath = os.path.dirname(os.path.realpath(__file__))
+OutputPath = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    f"output",
+)
+print("Begin FFXIVnetworkFinder...")
+seg_dict = {
+    idc.get_segm_name(seg): (idc.get_segm_start(seg), idc.get_segm_end(seg))
+    for seg in idautils.Segments()
+}
+min_ea = idaapi.inf_get_min_ea()
+max_ea = idaapi.inf_get_max_ea()
+min_text_ea = seg_dict[".text"][0]
+max_text_ea = seg_dict[".text"][1]
+slist = idautils.Strings()
+slist_s = [str(s) for s in slist]  # s.ea, s.length, s.type, str(s)
 
-# Utils
+for s in slist_s:
+    if r"shanda" in s:
+        ServerType = "CN"
+        break
+for s in slist_s:
+    if r"/*****ff14******rev" in s:
+        BuildID = s[27:37].replace('/', '_')
+        break
+print(f"{ServerType}_{BuildID}")
+
+errors = {
+    "SigNotFound": [],
+    "FuncNotFound": [],
+    "ArgvNotFound": [],
+    "DoubleCase": {},
+    "DoubleXref": {},
+    "DoublePath": {},
+}
+#########
+# Utils #
+#########
+JMP_INS = ["jmp", "jz", "ja", "jb", "jnz"]
+CALL_INS = ["call"]
+RET_INS = ["ret", "retn"]
+CTRL_INS = JMP_INS + CALL_INS + RET_INS
+
+
+def get_ctrl_target(ea):
+    xrefs = list(idautils.XrefsFrom(ea, flags=1))
+    return xrefs[0].to if len(xrefs) > 0 else idc.BADADDR
+
+
+def find_pattern(pattern):
+    address = ida_search.find_binary(
+        min_text_ea, max_text_ea, pattern, 16, idc.SEARCH_DOWN
+    )
+    return address
+
+
 def find_next_insn(ea, insn, step=30):
     for _ in range(step):
         if idc.print_insn_mnem(ea) == insn:
             return ea
+        if ea >= max_ea:
+            break
         ea = idc.next_head(ea)
-        if ea == idc.BADADDR:
-            return ea
     return idc.BADADDR
 
 
@@ -26,13 +82,15 @@ def find_prev_insn(ea, insn, step=10):
     for _ in range(step):
         if idc.print_insn_mnem(ea) == insn:
             return ea
+        if ea <= min_ea:
+            break
         ea = idc.prev_head(ea)
     return idc.BADADDR
 
 
 def find_prev_ctrl(cea, up):
     while cea > up:
-        if idc.print_insn_mnem(cea) in ["jmp", "jz", "ja", "jb", "call", "ret", "retn"]:
+        if idc.print_insn_mnem(cea) in CTRL_INS:
             return cea
         cea = idc.prev_head(cea)
     return up
@@ -40,284 +98,394 @@ def find_prev_ctrl(cea, up):
 
 def find_next_ctrl(cea, down):
     while cea < down:
-        if idc.print_insn_mnem(cea) in ["jmp", "jz", "ja", "jb", "call", "ret", "retn"]:
+        if idc.print_insn_mnem(cea) in CTRL_INS:
             return cea
         cea = idc.next_head(cea)
     return down
 
 
-def aob(pattern):
-    address = idc.find_binary(text_start, SEARCH_DOWN, pattern)
-    return address
+#'ZoneClientIpc'
+#'ChatServerIpc'
+#'ChatClientIpc'
+#'LobbyServerIpc'
+#'LobbyClientIpc'
 
+#####################
+# ServerZoneIpcType #
+#####################
+class SwitchTable:
+    def __init__(self, ea) -> None:
+        self.content = []
+        self.switch_func = idaapi.get_func(ea)
+        self.switch_address = find_next_insn(ea, "jmp")
+        print(f"switch table at {self.switch_address:x}")
+        switch_info = ida_nalt.get_switch_info(self.switch_address)
+        print(switch_info)
+        print(switch_info.ncases)
+        print(switch_info.jumps)
 
-error_opcodes = {"NotFound": {}, "DoubleCase": {}, "DoubleXref": {}, "DoublePath": {}}
+        bias = switch_info.jumps
+        lowcase = switch_info.lowcase
+        element_num = switch_info.get_jtable_size()
+        element_size = switch_info.get_jtable_element_size()
 
-###################
-# ServerZoneIpcType#
-###################
-switch_table = []
-server_opcodes = {}
-
-
-def init_switch_table(switch_address):
-    print(switch_address)
-    switch_func = idaapi.get_func(switch_address)
-    switch_info = ida_nalt.get_switch_info(switch_address)
-    print(switch_info)
-    print(switch_info.ncases)
-    print(switch_info.jumps)
-    loc = switch_info.jumps
-    lowcase = switch_info.lowcase
-    element_num = switch_info.get_jtable_size()
-    element_size = switch_info.get_jtable_element_size()
-    for i in range(0, element_num):
-        table_entry = loc + i * element_size
-        startea = switch_info.elbase + idc.get_wide_dword(table_entry)
-        endea = find_next_insn(startea, "jmp", 1000)
-        print(
-            f"case 0x{i+lowcase:x}: table@{table_entry:x} jmp@{startea:x} - {endea:x}"
-        )
-        switch_table.append({"case": i + lowcase, "start": startea, "end": endea})
-    return
-
-
-def get_switch_case(ea):
-    maybe = []
-    if is_switch(ea):
-        maybe = [
-            case["case"]
-            for case in switch_table
-            if (ea >= case["start"] and ea <= case["end"])
-        ]
-    return maybe
-
-
-def is_switch(ea):
-    if ea > switch_func.start_ea and ea < switch_func.end_ea:
-        return True
-    return False
-
-
-def get_opcode(ea, name):
-    maybe = get_switch_case(ea)
-    if len(maybe) > 0:
-        if len(maybe) > 1:
-            print(f"{name} Double Case")
-            if name not in error_opcodes["DoubleCase"]:
-                error_opcodes["DoubleCase"][name] = maybe
-        for op in maybe:
+        for i in range(0, element_num):
+            table_entry = bias + i * element_size
+            startea = switch_info.elbase + idc.get_wide_dword(table_entry)
+            endea = find_next_insn(startea, "jmp", 1000)
             print(
-                f'Opcode 0x{op:03x}({op:03d}): {name} {"?(Double Case)"if(len(maybe)>1)else "?(Double Xref)"if(name in server_opcodes)else""}'
+                f"case 0x{i+lowcase:03x}: table@{table_entry:x} jmp@{startea:x} - {endea:x}"
             )
-            if name not in server_opcodes:
-                server_opcodes[name] = op
-            else:
-                if name not in error_opcodes["DoubleXref"]:
-                    error_opcodes["DoubleXref"][name] = [server_opcodes[name]] + maybe
-                else:
-                    error_opcodes["DoubleXref"][name] += maybe
-        return True
-    else:
-        return False
-
-
-def get_opcode_from_addr(ea, name):
-    func = idaapi.get_func(ea)
-    if func:
-        ea = func.start_ea
-    xrefs_all = list(idautils.XrefsTo(ea, flags=1))
-    if len(xrefs_all) <= 0:
-        return False
-    xrefs = [xref.frm for xref in xrefs_all if is_switch(xref.frm)]
-    if len(xrefs) < 1:
-        if functools.reduce(
-            lambda a, b: a or b,
-            [get_opcode_from_addr(xref.frm, name) for xref in xrefs_all],
-        ):
-            return True
-        else:
-            return False
-    else:
-        ea = xrefs[0]
-        return get_opcode(ea, name)
-
-
-def get_opcode_from_sig(sig, name, offset=0):
-    ea = aob(sig) + offset
-    # in_swich
-    if get_opcode(ea, name):
-        return True
-    if get_opcode_from_addr(ea, name):
-        return True
-    return False
-
-
-###################
-# ClientZoneIpcType#
-###################
-send_table = {}
-client_opcodes = {}
-
-
-def add_send_opcode(start, end, op):
-    global send_table
-    print(f"Opcode 0x{op:03x}({op:03d}) @{start:x} - {end:x}")
-    if str(op) in send_table:
-        send_table[str(op)] += [(start, end)]
-    else:
-        send_table[str(op)] = [(start, end)]
-
-
-def init_send_table(ea):
-    call_ea = ea
-    func = idaapi.get_func(ea)
-    if not func:
-        xrefs = [xref.frm for xref in idautils.XrefsTo(ea, 0) if xref.iscode == 1]
-        for xref in xrefs:
-            init_send_table(xref)
+            self.content.append({"case": i + lowcase, "start": startea, "end": endea})
         return
-    op_var = ""
-    # find lea rdx [opcode] between func.start-call
-    ea = call_ea
-    while ea > func.start_ea:
-        if (
-            idc.print_insn_mnem(ea) == "lea"
-            and idc.print_operand(ea, 0) == "rdx"
-            and idc.get_operand_type(ea, 1) == idaapi.o_displ
-        ):
-            op_var = idc.print_operand(ea, 1)
-            break
-        ea = idc.prev_head(ea)
-    if op_var != "":
-        # find mov [opcode] imm between func.start-call
+
+    def in_switch(self, ea) -> bool:
+        return (
+            True
+            if ea > self.switch_func.start_ea and ea < self.switch_func.end_ea
+            else False
+        )
+
+    def index(self, ea) -> list:
+        maybe = []
+        if self.in_switch(ea):
+            maybe = [
+                case["case"]
+                for case in self.content
+                if (ea >= case["start"] and ea <= case["end"])
+            ]
+        return maybe
+
+
+class SimpleSwitch:
+    def __init__(self, switch_address) -> None:
+        self.content = []
+        self.switch_func = idaapi.get_func(switch_address)
+        self.switch_func_item = list(idautils.FuncItems(switch_address))
+        self.process_case_block(switch_address, 0, 0, False)
+        print(self.content)
+
+    def process_case_block(self, start, rcase, ccase, iscmp):
+        _reg_case = rcase
+        _t_mov_op1 = 0
+        _t_cmp_tmp = ccase
+        _t_cmp_yes = iscmp
+        for ea in self.switch_func_item:
+            if ea < start:
+                continue
+            ins = idc.print_insn_mnem(ea)
+            op0 = idc.print_operand(ea, 0)
+            op1 = idc.print_operand(ea, 1)
+            if ins in JMP_INS:
+                self.process_case_block(
+                    get_ctrl_target(ea), _reg_case, _t_cmp_tmp, _t_cmp_yes
+                )
+                continue
+            if ins in RET_INS:
+                continue
+            if ins == "mov":
+                _t_mov_op1 = int(op1.strip('h'), 16)
+                continue
+            if ins == "call":
+                _case = _t_cmp_tmp if _t_cmp_yes else _reg_case
+                if self.index(_t_mov_op1):
+                    continue
+                self.content.append({"case": _case, "arg": _t_mov_op1})
+                print(f"case:0x{_case:03x} arg@{_t_mov_op1:x}")
+                continue
+            if ins == "cmp" and op0 == "r10d":
+                if idc.print_insn_mnem(idc.next_head(ea)) == 'jnz':
+                    _reg_case += int(op1.strip('h'), 16)
+                    _t_cmp_yes = False
+                else:
+                    _t_cmp_tmp = int(op1.strip('h'), 16)
+                    _t_cmp_yes = True
+                continue
+            if ins == "sub" and op0 == "r10d":
+                _reg_case += int(op1.strip('h'), 16)
+                _t_cmp_yes = False
+                continue
+
+    def index(self, arg):
+        for case in self.content:
+            if case["arg"] == arg:
+                return case["case"]
+        return None
+
+
+class CallTable:
+    def __init__(self, func_address) -> None:
+        self.content = []
+        self.call_fanc = idaapi.get_func(func_address)
+        self.init_send_table(func_address)
+        self.content.sort(key=lambda x: x["case"])
+        print("Sorted CallTable")
+        for i in self.content:
+            print(f"Code 0x{i['case']:03x}: between@{i['start']:x} - {i['end']:x}")
+
+    def init_send_table(self, ea):
+        call_ea = ea
+        func = idaapi.get_func(ea)
+        if not func:
+            xrefs = [xref.frm for xref in idautils.XrefsTo(ea, 0) if xref.iscode == 1]
+            for xref in xrefs:
+                self.init_send_table(xref)
+            return
+        op_var = ""
+        # find lea rdx [opcode] between func.start-call
         ea = call_ea
         while ea > func.start_ea:
             if (
-                idc.print_insn_mnem(ea) == "mov"
-                and idc.print_operand(ea, 0) == op_var
-                and idc.get_operand_type(ea, 1) == idaapi.o_imm
+                idc.print_insn_mnem(ea) == "lea"
+                and idc.print_operand(ea, 0) == "rdx"
+                and idc.get_operand_type(ea, 1) == idaapi.o_displ
             ):
-
-                op = idc.print_operand(ea, 1)
-                op = op.replace("h", "")
-                if op == "":
-                    return
-                op = int(op, 16)
-                add_send_opcode(
-                    find_prev_ctrl(ea, func.start_ea),
-                    find_next_ctrl(ea, func.end_ea),
-                    op,
-                )
+                op_var = idc.print_operand(ea, 1)
                 break
             ea = idc.prev_head(ea)
-        return
-    else:
-        for xref in idautils.XrefsTo(func.start_ea, 0):
-            if xref.iscode == 1:
-                init_send_table(xref.frm)
-        return
+        if op_var != "":
+            # find mov [opcode] imm between func.start-call
+            ea = call_ea
+            while ea > func.start_ea:
+                if (
+                    idc.print_insn_mnem(ea) == "mov"
+                    and idc.print_operand(ea, 0) == op_var
+                    and idc.get_operand_type(ea, 1) == idaapi.o_imm
+                ):
+
+                    op = idc.print_operand(ea, 1)
+                    op = op.replace("h", "")
+                    if op == "":
+                        return
+                    op = int(op, 16)
+                    self.add_send_opcode(
+                        op,
+                        find_prev_ctrl(ea, func.start_ea),
+                        find_next_ctrl(ea, func.end_ea),
+                    )
+                    break
+                ea = idc.prev_head(ea)
+            return
+        else:
+            for xref in idautils.XrefsTo(func.start_ea, 0):
+                if xref.iscode == 1:
+                    self.init_send_table(xref.frm)
+            return
+
+    def add_send_opcode(self, op, start, end):
+        # print(f"Code 0x{op:03x}: between@{start:x} - {end:x}")
+        self.content.append({"case": op, "start": start, "end": end})
+
+    def index(self, ea):
+        maybe = [i["case"] for i in self.content if ea >= i["start"] and ea < i["end"]]
+        return list(set(maybe))
 
 
-def get_send_from_sig(sig, name, offset=0):
-    ea = aob(sig) + offset
-    if offset > 0:
-        print(ea)
-    maybe = []
-    for op in send_table:
-        ranges = send_table[op]
-        for r in ranges:
-            if ea > r[0] and ea < r[1]:
-                maybe.append(int(op))
-    maybe = list(set(maybe))
-    if len(maybe) > 0:
-        if len(maybe) > 1:
-            if name not in error_opcodes["DoublePath"]:
-                error_opcodes["DoublePath"][name] = maybe
-        for op in maybe:
-            print(
-                f'Opcode 0x{int(op):03x}({int(op):03d}): {name} {"?(Double Path)"if(len(maybe)>1)else""}'
-            )
-            if name not in client_opcodes:
-                client_opcodes[name] = op
+class ServerZoneIpcType:
+    def __init__(self, config) -> None:
+        self.config = config.content["ServerZoneIpcType"]
+
+        self.content = {}
+        self.table = SwitchTable(self.config["__init__"]["ProcessZonePacketDown"])
+        del self.config["__init__"]["ProcessZonePacketDown"]
+        self.funcs = {}
+        for func in self.config["__init__"]:
+            if self.config["__init__"][func]:
+                self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
+        del self.config["__init__"]
+        print("ServerZone Inited...")
+        for name in self.config:
+            if type(self.config[name]) == int:
+                self.find_in_table(self.config[name], name)
+            elif type(self.config[name]) == dict:
+                if "Param" in self.config[name]:
+                    func = self.config[name]["Function"]
+                    argv = self.config[name]["Param"]
+                    self.find_in_simple(func, argv, name)
+
+    def find_in_simple(self, func, argv, name):
+        if func not in self.funcs:
+            errors["FuncNotFound"].append(name)
+            return False
+        op = self.funcs[func].index(argv)
+        if not op:
+            errors["ArgvNotFound"].append(name)
+            return False
+        self.content[name] = op
+        print(f'Opcode 0x{op:03x}({op:03d}): {name}')
         return True
-    else:
-        return False
+
+    def find_in_table_result(self, ea, name):
+        maybe = self.table.index(ea)
+        if len(maybe) > 0:
+            if len(maybe) > 1:
+                print(f"{name} Double Case")
+                if name not in errors["DoubleCase"]:
+                    errors["DoubleCase"][name] = maybe
+            for op in maybe:
+                print(
+                    f'Opcode 0x{op:03x}({op:03d}): {name} {"?(Double Case)"if(len(maybe)>1)else "?(Double Xref)"if(name in self.content)else""}'
+                )
+                if name not in self.content:
+                    self.content[name] = op
+                else:
+                    if name not in errors["DoubleXref"]:
+                        errors["DoubleXref"][name] = [self.content[name]] + maybe
+                    else:
+                        errors["DoubleXref"][name] += maybe
+            return True
+        else:
+            return False
+
+    def find_in_table(self, ea, name):
+        func = idaapi.get_func(ea)
+        if func:
+            ea = func.start_ea
+        if self.table.in_switch(ea):
+            return self.find_in_table_result(ea, name)
+        xrefs_all = list(idautils.XrefsTo(ea, flags=1))
+        if len(xrefs_all) <= 0:
+            return False
+        xrefs = [xref.frm for xref in xrefs_all if self.table.in_switch(xref.frm)]
+        if len(xrefs) < 1:
+            if functools.reduce(
+                lambda a, b: a or b,
+                [self.find_in_table(xref.frm, name) for xref in xrefs_all],
+            ):
+                return True
+            else:
+                return False
+        else:
+            ea = xrefs[0]
+            return self.find_in_table_result(ea, name)
 
 
-###
-isCN = False
-datafile = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    f"signatures{'_cn'if isCN else ''}.json",
-)
-resultfile = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), f"opcodes{'_cn'if isCN else ''}.json"
-)
-errorfile = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), f"errors{'_cn'if isCN else ''}.json"
-)
-dumpfile = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), f"dump{'_cn'if isCN else ''}.json"
-)
+class ClientZoneIpcType:
+    def __init__(self, config) -> None:
+        self.config = config.content["ClientZoneIpcType"]
+        self.content = {}
+        self.table = CallTable(self.config["__init__"]["ProcessZonePacketUp"])
+        del self.config["__init__"]["ProcessZonePacketUp"]
+        print("ClientZone Inited...")
+        for name in self.config:
+            if type(self.config[name]) == int:
+                self.find_in_table(self.config[name], name)
 
-with open(datafile, "r") as f:
-    signature = json.load(f)
-
-packet_down = aob(signature["ProcessZonePacketDown"])
-packet_up = aob(signature["ProcessZonePacketUp"])
-
-switch_address = find_next_insn(packet_down, "jmp")
-switch_func = idaapi.get_func(switch_address)
-init_switch_table(switch_address)
-init_send_table(packet_up)
-for op in send_table:
-    print(f"Opcode 0x{int(op):03x}({int(op):03d}): {send_table[(str(op))]}")
+    def find_in_table(self, ea, name):
+        maybe = self.table.index(ea)
+        if len(maybe) > 0:
+            if len(maybe) > 1:
+                if name not in errors["DoublePath"]:
+                    errors["DoublePath"][name] = maybe
+            for op in maybe:
+                print(
+                    f'Opcode 0x{int(op):03x}({int(op):03d}): {name} {"?(Double Path)"if(len(maybe)>1)else""}'
+                )
+                if name not in self.content:
+                    self.content[name] = op
+            return True
+        else:
+            return False
 
 
-for sig_name in signature["ServerZoneIpcType"]:
-    if not get_opcode_from_sig(signature["ServerZoneIpcType"][sig_name], sig_name):
-        print(f"Cannot found {sig_name}")
-        error_opcodes["NotFound"][sig_name] = []
+class ConfigReader:
+    def __init__(self) -> None:
+        self.path = os.path.join(
+            ConfigPath,
+            f"signatures.json",
+        )
+        with open(self.path, "r") as f:
+            self.content = json.load(f)
+        self.instance(self.content["ServerZoneIpcType"])
+        self.instance(self.content["ClientZoneIpcType"])
 
-for sig_name in signature["ClientZoneIpcType"]:
-    offset = 0
-    if sig_name in signature["Offset"]:
-        offset = signature["Offset"][sig_name]
-        print(f"offset {offset}")
-    if not get_send_from_sig(
-        signature["ClientZoneIpcType"][sig_name], sig_name, offset
-    ):
-        print(f"Cannot found {sig_name}")
-        error_opcodes["NotFound"][sig_name] = []
+    def instance(self, item):
+        for i in item:
+            if i == "__init__":
+                self.instance(item[i])
+            item[i] = self.sig2addr(item[i], i)
 
-print(server_opcodes)
-print(client_opcodes)
-print(error_opcodes)
-if len(error_opcodes["NotFound"]) > 0:
-    print("Some signature failed to find opcode!")
-else:
-    print("All Opcode from signature Found!")
+    def sig2addr(self, sig, name):
+        address = idc.BADADDR
+        _sig = None
+        if type(sig) == str:
+            _sig = sig
+        elif type(sig) == dict:
+            # don't process
+            if "Global" in sig:
+                _sig = sig["Global"]
+            if ServerType == "CN" and "CN" in sig:
+                _sig = sig["CN"]
+            if not _sig:
+                return sig
 
+        address = find_pattern(_sig)
+        if address == idc.BADADDR:
+            print(f"Signature {name} Not Found")
+            errors["SigNotFound"].append(name)
+            return None
+        else:
+            if "Offset" in sig:
+                address += sig["Offset"]
+            return address
+
+
+config = ConfigReader()
+print(config.content)
+serverzone = ServerZoneIpcType(config)
+print(serverzone.content)
+clientzone = ClientZoneIpcType(config)
+print(clientzone.content)
+print(errors)
+
+opcodes_internal = {
+    "version": BuildID,
+    "region": ServerType,
+    "lists": {
+        "ServerZoneIpcType": serverzone.content,
+        "ClientZoneIpcType": clientzone.content,
+    },
+}
 opcodes = {
-    "version": signature["Version"],
-    "region": signature["Region"],
+    "version": BuildID,
+    "region": ServerType,
     "lists": {
         "ServerZoneIpcType": [
-            {"name": i, "opcode": server_opcodes[i]} for i in server_opcodes
+            {"name": i, "opcode": serverzone.content[i]} for i in serverzone.content
         ],
         "ClientZoneIpcType": [
-            {"name": i, "opcode": client_opcodes[i]} for i in client_opcodes
+            {"name": i, "opcode": clientzone.content[i]} for i in clientzone.content
         ],
     },
 }
 
-with open(resultfile, "w+") as f:
+debugs = {"ClientCallTable": clientzone.table.content}
+
+
+output_dir = os.path.join(
+    OutputPath,
+    f"{ServerType}_{BuildID}",
+)
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+outpath = lambda name: os.path.join(
+    output_dir,
+    name,
+)
+opcodes_internal_path = outpath("opcodes_internal.json")
+errors_path = outpath("errors.json")
+debugs_path = outpath("debug.json")
+opcodes_path = outpath("opcodes.json")
+with open(opcodes_path, "w+") as f:
     json.dump(opcodes, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Result saved on {resultfile}")
-with open(errorfile, "w+") as f:
-    json.dump(error_opcodes, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Error saved on {errorfile}")
-with open(dumpfile, "w+") as f:
-    json.dump(send_table, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Dump saved on {dumpfile}")
+    print(f"Result saved on {opcodes_path}")
+with open(opcodes_internal_path, "w+") as f:
+    json.dump(opcodes_internal, f, sort_keys=False, indent=4, separators=(",", ":"))
+    print(f"Result saved on {opcodes_internal_path}")
+
+with open(errors_path, "w+") as f:
+    json.dump(errors, f, sort_keys=False, indent=4, separators=(",", ":"))
+    print(f"Error saved on {errors_path}")
+with open(debugs_path, "w+") as f:
+    json.dump(debugs, f, sort_keys=False, indent=4, separators=(",", ":"))
+    print(f"Dump saved on {debugs_path}")
