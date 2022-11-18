@@ -192,7 +192,7 @@
                 "opcode":443
             },
             {
-                "name":"EffectResult1",
+                "name":"EffectResult",
                 "opcode":661
             },
             {
@@ -208,7 +208,7 @@
                 "opcode":627
             },
             {
-                "name":"EffectResultBasic1",
+                "name":"EffectResultBasic",
                 "opcode":266
             },
             {

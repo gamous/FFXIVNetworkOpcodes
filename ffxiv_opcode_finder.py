@@ -489,3 +489,21 @@ with open(errors_path, "w+") as f:
 with open(debugs_path, "w+") as f:
     json.dump(debugs, f, sort_keys=False, indent=4, separators=(",", ":"))
     print(f"Dump saved on {debugs_path}")
+
+template_path = os.path.join(ConfigPath, f"machina.template")
+mtemplate = []
+mresult = []
+with open(template_path, "r") as f:
+    mtemplate = f.readlines()
+for l in mtemplate:
+    opcode_temp = re.match(r".+(?P<opcode_name>\{.+\})", l).groupdict()["opcode_name"]
+    opcode_name = opcode_temp[1:-1]
+    for op in (
+        opcodes["lists"]["ServerZoneIpcType"] + opcodes["lists"]["ClientZoneIpcType"]
+    ):
+        if op["name"] == opcode_name:
+            l = l.replace(opcode_temp, f"{op['opcode']:X}")
+            break
+    mresult.append(l)
+with open(outpath("machina.txt"), "w+") as f:
+    f.writelines(mresult)
