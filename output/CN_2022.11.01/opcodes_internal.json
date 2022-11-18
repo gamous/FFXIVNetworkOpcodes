@@ -84,7 +84,6 @@
             "ChatHandler":940,
             "ClientTrigger ":177,
             "InventoryModifyHandler":142,
-            "InventoryHandlerOffset":142,
             "MarketBoardPurchaseHandler":464,
             "SetSearchInfoHandler":636,
             "UpdatePositionHandler":337,

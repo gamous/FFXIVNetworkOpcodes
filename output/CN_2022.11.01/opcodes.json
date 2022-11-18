@@ -322,10 +322,6 @@
                 "opcode":142
             },
             {
-                "name":"InventoryHandlerOffset",
-                "opcode":142
-            },
-            {
                 "name":"MarketBoardPurchaseHandler",
                 "opcode":464
             },

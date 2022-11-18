@@ -26,7 +26,7 @@ Some mapping of synonyms provided in [NAME.md](https://github.com/gamous/FFXIVNe
 
 #### Todo
 
-- More generation
+- More generators
 - Support more complex but not jmptable switch
 
 
