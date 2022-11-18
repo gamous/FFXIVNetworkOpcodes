@@ -6,7 +6,8 @@
                 "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
             },
             "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 51",
-            "EffectResultBasic": "48 83 EC ?? 45 0F B7 D0 41 81 FA ?? ?? ?? ?? 77 ??"
+            "EffectResultBasic": "48 83 EC ?? 45 0F B7 D0 41 81 FA ?? ?? ?? ?? 77 ??",
+            "ProcessSystemLogMessage": "74 67 41 81 EA ? ? ? ?"
         },
         "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
         "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
@@ -105,6 +106,10 @@
         "EffectResultBasic64": {
             "Function": "EffectResultBasic",
             "Param": 1032
+        },
+        "SystemLogMessage": {
+            "Function": "ProcessSystemLogMessage",
+            "Param": 24
         }
     },
     "ClientZoneIpcType": {
