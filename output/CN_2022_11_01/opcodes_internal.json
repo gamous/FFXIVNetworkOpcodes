@@ -59,7 +59,8 @@
             "EffectResultBasic8":999,
             "EffectResultBasic16":785,
             "EffectResultBasic32":692,
-            "EffectResultBasic64":251
+            "EffectResultBasic64":251,
+            "SystemLogMessage":516
         },
         "ClientZoneIpcType":{
             "ActionRequest":736,
