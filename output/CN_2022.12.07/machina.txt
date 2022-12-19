@@ -12,7 +12,7 @@ EffectResult|200
 EffectResultBasic|1DA
 ActorControl|365
 ActorControlSelf|245
-ActorControlTarget|1EF
+ActorControlTarget|15B
 UpdateHpMpTp|121
 PlayerSpawn|2B6
 NpcSpawn|11D
@@ -22,4 +22,4 @@ ActorSetPos|1C4
 ActorGauge|34B
 PresetWaymark|2C3
 Waymark|31D
-SystemLogMessage|{SystemLogMessage}
+SystemLogMessage|110

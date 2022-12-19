@@ -17,7 +17,7 @@
             },
             {
                 "name":"ActorControlTarget",
-                "opcode":495
+                "opcode":347
             },
             {
                 "name":"ActorGauge",
@@ -116,6 +116,38 @@
                 "opcode":136
             },
             {
+                "name":"EventPlay",
+                "opcode":103
+            },
+            {
+                "name":"EventPlay4",
+                "opcode":395
+            },
+            {
+                "name":"EventPlay8",
+                "opcode":127
+            },
+            {
+                "name":"EventPlay16",
+                "opcode":517
+            },
+            {
+                "name":"EventPlay32",
+                "opcode":430
+            },
+            {
+                "name":"EventPlay64",
+                "opcode":601
+            },
+            {
+                "name":"EventPlay128",
+                "opcode":257
+            },
+            {
+                "name":"EventPlay255",
+                "opcode":192
+            },
+            {
                 "name":"EventStart",
                 "opcode":674
             },
@@ -192,6 +224,10 @@
                 "opcode":514
             },
             {
+                "name":"SystemLogMessage",
+                "opcode":272
+            },
+            {
                 "name":"StatusEffectList",
                 "opcode":510
             },
@@ -245,7 +281,7 @@
             },
             {
                 "name":"SubmarineProgressionStatus",
-                "opcode":678
+                "opcode":690
             },
             {
                 "name":"SubmarineStatusList",
