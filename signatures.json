@@ -5,18 +5,18 @@
                 "Global": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
                 "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
             },
-            "EffectResult": "48 83 EC 38 45 0F B7 D0 41 81 EA ? ? ? ? 74 4E",
+            "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?",
             "EffectResultBasic": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?",
             "EventPlay": {
                 "Global": "0F 87 ? ? ? ? 74 6B",
-                "CN": "74 6E 41 81 EA ? ? ? ?"
+                "CN": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 83 EA ?"
             },
             "ProcessSystemLogMessage": {
                 "Global": {
                     "Signature": "E8 ? ? ? ? 44 0F B6 4B ? 4C 8D 43 1C",
                     "Type": "Call"
                 },
-                "CN": "74 67 41 81 EA ? ? ? ?"
+                "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
             }
         },
         "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
