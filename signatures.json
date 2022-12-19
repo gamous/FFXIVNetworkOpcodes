@@ -5,10 +5,19 @@
                 "Global": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
                 "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
             },
-            "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 51",
-            "EffectResultBasic": "48 83 EC ?? 45 0F B7 D0 41 81 FA ?? ?? ?? ?? 77 ??",
-            "EventPlay": "74 6E 41 81 EA ? ? ? ?",
-            "ProcessSystemLogMessage": "74 67 41 81 EA ? ? ? ?"
+            "EffectResult": "48 83 EC 38 45 0F B7 D0 41 81 EA ? ? ? ? 74 4E",
+            "EffectResultBasic": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?",
+            "EventPlay": {
+                "Global": "0F 87 ? ? ? ? 74 6B",
+                "CN": "74 6E 41 81 EA ? ? ? ?"
+            },
+            "ProcessSystemLogMessage": {
+                "Global": {
+                    "Signature": "E8 ? ? ? ? 44 0F B6 4B ? 4C 8D 43 1C",
+                    "Type": "Call"
+                },
+                "CN": "74 67 41 81 EA ? ? ? ?"
+            }
         },
         "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
         "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
@@ -26,7 +35,7 @@
         "CFPreferredRole": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8D 4E 10 E8 ? ? ? ? E9 ? ? ? ?",
         "CompanyAirshipStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 40 48 85 C9 74 ? BA ? ? ? ?",
         "CompanySubmersibleStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 48 48 85 C9 74 ?",
-        "ContentFinderNotifyPop": "40 53 57 48 83 EC ? 48 8B D9 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F8",
+        "ContentFinderNotifyPop": "48 89 5C 24 20 57 48 83 EC ? 48 8B D9 48 8D 0D ? ? ? ?",
         "EffectResult": {
             "Function": "EffectResult",
             "Param": 96
@@ -76,9 +85,33 @@
             "Function": "EventPlay",
             "Param": 48
         },
+        "EventPlay8": {
+            "Function": "EventPlay",
+            "Param": 64
+        },
+        "EventPlay16": {
+            "Function": "EventPlay",
+            "Param": 96
+        },
+        "EventPlay32": {
+            "Function": "EventPlay",
+            "Param": 160
+        },
+        "EventPlay64": {
+            "Function": "EventPlay",
+            "Param": 288
+        },
+        "EventPlay128": {
+            "Function": "EventPlay",
+            "Param": 544
+        },
+        "EventPlay255": {
+            "Function": "EventPlay",
+            "Param": 1048
+        },
         "EventStart": "E8 ? ? ? ? 0F B6 46 1D",
         "Examine": "E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 48 8B 56 10",
-        "ExamineSearchInfo": "40 53 48 83 EC ? 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 00 48 8B C8 41 FF 90 08 01 00 00 48 8B C8 BA ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 08",
+        "ExamineSearchInfo": "40 53 48 83 EC 20 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 37",
         "InitZone": "E8 ? ? ? ? 48 8D 4E 60 E8 ? ? ? ? 48 8D 4E 6C",
         "InventoryActionAck": "E9 ? ? ? ? 48 8D 56 10 8B CF E8 ? ? ? ? E9 ? ? ? ? 48 8B D6",
         "MarketBoardItemListing": "E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 00 48 8B D3 48 8B C8 48 83 C4 ? 5B 49 FF 60 60 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53",
