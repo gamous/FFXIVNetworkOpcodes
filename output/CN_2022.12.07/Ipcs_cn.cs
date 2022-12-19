@@ -4,12 +4,12 @@ namespace FFXIVOpcodes.CN
     public enum ServerLobbyIpcType : ushort
     {
     
-    }
+    };
     
     public enum ClientLobbyIpcType : ushort
     {
     
-    }
+    };
     
     public enum ServerZoneIpcType : ushort
     {
@@ -93,7 +93,7 @@ namespace FFXIVOpcodes.CN
         UpdateRecastTimes = 0x00B6,
         UpdateHate = 0x0310,
         UpdateHater = 0x0293,
-    }
+    };
     
     public enum ClientLobbyIpcType : ushort
     {
@@ -106,16 +106,16 @@ namespace FFXIVOpcodes.CN
         SetSearchInfoHandler = 0x0381,
         UpdatePositionHandler = 0x00D4,
         UpdatePositionInstance = 0x039A,
-    }
+    };
     
     public enum ServerChatIpcType : ushort
     {
     
-    }
+    };
     
     public enum ClientChatIpcType : ushort
     {
     
-    }
+    };
     
 }
