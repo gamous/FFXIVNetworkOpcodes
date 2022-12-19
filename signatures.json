@@ -7,8 +7,17 @@
             },
             "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?",
             "EffectResultBasic": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?",
-            "EventPlay": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 83 EA ?",
-            "ProcessSystemLogMessage": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
+            "EventPlay": {
+                "Global": "0F 87 ? ? ? ? 74 6B",
+                "CN": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 83 EA ?"
+            },
+            "ProcessSystemLogMessage": {
+                "Global": {
+                    "Signature": "E8 ? ? ? ? 44 0F B6 4B ? 4C 8D 43 1C",
+                    "Type": "Call"
+                },
+                "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
+            }
         },
         "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
         "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
