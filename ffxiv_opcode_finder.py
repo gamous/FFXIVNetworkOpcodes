@@ -527,7 +527,7 @@ def get_enum_textblock(name, enums, ntype, indent):
         res += [f"    {k} = 0x{enums[k]:04X}," for k in enums]
     else:
         res += ['']
-    res += ['}', '']
+    res += ['};', '']
     return list(map(lambda l: " " * indent + l, res))
 
 
