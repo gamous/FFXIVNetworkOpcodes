@@ -93,6 +93,7 @@ namespace FFXIVOpcodes.CN
         UpdateRecastTimes = 0x00B6,
         UpdateHate = 0x0310,
         UpdateHater = 0x0293,
+        SocialList = 0x0368,
     };
     
     public enum ClientLobbyIpcType : ushort

@@ -82,7 +82,8 @@
             "EnvironmentControl":777,
             "UpdateRecastTimes":182,
             "UpdateHate":784,
-            "UpdateHater":659
+            "UpdateHater":659,
+            "SocialList":872
         },
         "ClientZoneIpcType":{
             "ActionRequest":867,
