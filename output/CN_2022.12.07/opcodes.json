@@ -322,6 +322,10 @@
             {
                 "name":"UpdateHater",
                 "opcode":659
+            },
+            {
+                "name":"SocialList",
+                "opcode":872
             }
         ],
         "ClientZoneIpcType":[
