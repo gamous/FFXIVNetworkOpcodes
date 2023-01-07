@@ -5,24 +5,18 @@
         "Global": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
         "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
       },
-      "EffectResult": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?",
-      "EffectResultBasic": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?",
+      "EffectResult": "75 47 48 C7 44 24 ? ? ? ? ?",
+      "EffectResultBasic": "48 83 EC 38 45 0F B7 D0 41 81 FA ? ? ? ? 77 63",
       "EventPlay": {
-        "Global": "0F 87 ? ? ? ? 74 6B",
-        "CN": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 83 EA ?"
+        "Signature": "E8 ? ? ? ? 0F B6 ? 28 48 8D ? 2C 4C 8B ? 20 44 0F B7 ? 1C ",
+        "Type": "Call"
       },
-      "ProcessSystemLogMessage": {
-        "Global": {
-          "Signature": "E8 ? ? ? ? 44 0F B6 4B ? 4C 8D 43 1C",
-          "Type": "Call"
-        },
-        "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
-      }
+      "ProcessSystemLogMessage": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
     },
     "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
     "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
     "ActorControlSelf": "0F 95 C2 E8 ? ? ? ? 0F B7 17",
-    "ActorControlTarget": "48 8B 46 28 EB ?",
+    "ActorControlTarget": "4C 8D ? 10 8B ? 48 8D 0D ? ? ? ? E8 ? ? ? FF F6 05 ? ? ? ? 04 74 2C 0F B7 ? 10 48 8D 0D ? ? ? ? E8 ? ? ? ? 84 C0 74 18 0F B7 ? 10 48 8D 0D ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8B ? 28",
     "ActorGauge": "4C 8B 01 4D 85 C0 74 ? 0F B6 02",
     "ActorMove": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B D9 8B F2 48 63 49 ?",
     "ActorSetPos": "48 8B C4 48 89 58 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 70 ? 48 8B F1",
@@ -76,7 +70,6 @@
       "Function": "EffectResultBasic",
       "Param": 1032
     },
-    "EventFinish": "E8 ? ? ? ? 44 0F B6 4E 15",
     "EventPlay": {
       "Function": "EventPlay",
       "Param": 40
@@ -109,8 +102,9 @@
       "Function": "EventPlay",
       "Param": 1048
     },
-    "EventStart": "E8 ? ? ? ? 0F B6 46 1D",
-    "Examine": "E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 48 8B 56 10",
+    "EventFinish": "E8 ? ? ? ? 44 0F B6 ? 15 44 8B",
+    "EventStart": "E8 ? ? ? ? 0F B6 ? 1D 44 8B ? 20",
+    "Examine": "E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 48 8B 56",
     "ExamineSearchInfo": "40 53 48 83 EC 20 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 37",
     "InitZone": "E8 ? ? ? ? 48 8D 4E 60 E8 ? ? ? ? 48 8D 4E 6C",
     "InventoryActionAck": "E9 ? ? ? ? 48 8D 56 10 8B CF E8 ? ? ? ? E9 ? ? ? ? 48 8B D6",
