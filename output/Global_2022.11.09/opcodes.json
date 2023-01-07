@@ -17,7 +17,7 @@
             },
             {
                 "name":"ActorControlTarget",
-                "opcode":403
+                "opcode":651
             },
             {
                 "name":"ActorGauge",
@@ -64,6 +64,10 @@
                 "opcode":675
             },
             {
+                "name":"ContentFinderNotifyPop",
+                "opcode":371
+            },
+            {
                 "name":"EffectResult",
                 "opcode":496
             },
@@ -102,6 +106,46 @@
             {
                 "name":"EffectResultBasic64",
                 "opcode":544
+            },
+            {
+                "name":"EventPlay",
+                "opcode":908
+            },
+            {
+                "name":"EventPlay4",
+                "opcode":628
+            },
+            {
+                "name":"EventPlay8",
+                "opcode":729
+            },
+            {
+                "name":"EventPlay16",
+                "opcode":427
+            },
+            {
+                "name":"EventPlay32",
+                "opcode":515
+            },
+            {
+                "name":"EventPlay64",
+                "opcode":909
+            },
+            {
+                "name":"EventPlay128",
+                "opcode":863
+            },
+            {
+                "name":"EventPlay255",
+                "opcode":285
+            },
+            {
+                "name":"EventStart",
+                "opcode":377
+            },
+            {
+                "name":"ExamineSearchInfo",
+                "opcode":271
             },
             {
                 "name":"MarketBoardItemListing",
@@ -156,6 +200,14 @@
                 "opcode":229
             },
             {
+                "name":"PrepareZoning",
+                "opcode":731
+            },
+            {
+                "name":"SystemLogMessage",
+                "opcode":805
+            },
+            {
                 "name":"StatusEffectList",
                 "opcode":411
             },
@@ -201,7 +253,7 @@
             },
             {
                 "name":"SubmarineProgressionStatus",
-                "opcode":263
+                "opcode":705
             },
             {
                 "name":"SubmarineStatusList",
@@ -238,6 +290,10 @@
             {
                 "name":"UpdateHater",
                 "opcode":620
+            },
+            {
+                "name":"SocialList",
+                "opcode":374
             }
         ],
         "ClientZoneIpcType":[

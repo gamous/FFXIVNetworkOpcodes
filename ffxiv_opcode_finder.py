@@ -133,7 +133,10 @@ class SwitchTable:
         for i in range(0, element_num):
             table_entry = bias + i * element_size
             startea = switch_info.elbase + idc.get_wide_dword(table_entry)
-            endea = find_next_insn(startea, "jmp", 1000)
+            endea = min(
+                find_next_insn(startea, "jmp", 1000),
+                find_next_insn(startea, "retn", 1000),
+            )
             print(
                 f"case 0x{i+lowcase:03x}: table@{table_entry:x} jmp@{startea:x} - {endea:x}"
             )
@@ -163,7 +166,7 @@ class SimpleSwitch:
         self.content = []
         self.switch_func = idaapi.get_func(switch_address)
         self.switch_func_item = list(idautils.FuncItems(switch_address))
-        self.process_case_block(switch_address, 0, 0, False)
+        self.process_case_block(self.switch_func.start_ea, 0, 0, False)
         print(self.content)
 
     def process_case_block(self, start, rcase, ccase, iscmp):
@@ -421,11 +424,12 @@ class ConfigReader:
         if type(sig) == str:
             _sig = sig
         elif type(sig) == dict:
-            # don't process
-            if "Global" in sig:
-                _sig = sig["Global"]
+            if "Signature" in sig:
+                _sig = sig["Signature"]
+            if ServerType == "Global" and "Global" in sig:
+                return self.sig2addr(sig["Global"], name)
             if ServerType == "CN" and "CN" in sig:
-                _sig = sig["CN"]
+                return self.sig2addr(sig["CN"], name)
             if not _sig:
                 return sig
 
@@ -437,6 +441,8 @@ class ConfigReader:
         else:
             if "Offset" in sig:
                 address += sig["Offset"]
+            if "Type" in sig and sig["Type"] == "Call":
+                address = get_ctrl_target(address)
             return address
 
 
