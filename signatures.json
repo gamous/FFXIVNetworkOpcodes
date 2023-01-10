@@ -6,12 +6,15 @@
         "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
       },
       "EffectResult": "75 47 48 C7 44 24 ? ? ? ? ?",
-      "EffectResultBasic": "48 83 EC 38 45 0F B7 D0 41 81 FA ? ? ? ? 77 63",
+      "EffectResultBasic": {
+        "Global": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ?",
+        "CN": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?"
+      },
       "EventPlay": {
-        "Signature": "E8 ? ? ? ? 0F B6 ? 28 48 8D ? 2C 4C 8B ? 20 44 0F B7 ? 1C ",
+        "Signature": "E8 ? ? ? ? 0F B6 ? 28 48 8D ? 2C 4C 8B ? 20 44 0F B7 ? 1C",
         "Type": "Call"
       },
-      "ProcessSystemLogMessage": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?"
+      "ProcessSystemLogMessage": "48 83 EC 38 45 0F B7 D0 41 81 EA ? ? ? ? 74 67 41 83 EA ? 74 4E 41 ? EA ? ? ? ?"
     },
     "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
     "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
@@ -19,14 +22,20 @@
     "ActorControlTarget": "4C 8D ? 10 8B ? 48 8D 0D ? ? ? ? E8 ? ? ? FF F6 05 ? ? ? ? 04 74 2C 0F B7 ? 10 48 8D 0D ? ? ? ? E8 ? ? ? ? 84 C0 74 18 0F B7 ? 10 48 8D 0D ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8B ? 28",
     "ActorGauge": "4C 8B 01 4D 85 C0 74 ? 0F B6 02",
     "ActorMove": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B D9 8B F2 48 63 49 ?",
-    "ActorSetPos": "48 8B C4 48 89 58 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 70 ? 48 8B F1",
+    "ActorSetPos": {
+      "Global": "48 8B C4 48 89 58 10 ? ? ? ? ? 81 EC A0 ? ? ? 0F 29 70 D8 48 8B F1",
+      "CN": "48 8B C4 48 89 58 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 70 ? 48 8B F1"
+    },
     "Effect": "48 89 5C 24 18 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 58 48 8B DA",
     "AoeEffect8": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 70 02 00 00",
     "AoeEffect16": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 B0 04 00 00",
     "AoeEffect24": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 F0 06 00 00",
     "AoeEffect32": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 30 09 00 00",
     "BossStatusEffectList": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 F0",
-    "CFPreferredRole": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8D 4E 10 E8 ? ? ? ? E9 ? ? ? ?",
+    "CFPreferredRole": {
+      "Global": "E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 48 8B 7C 24 60 48 8B 5C 24 70 48 83 C4 ? 5E E9 ? ? ? ? 48 8D 4B 10 48 8B 7C 24 60",
+      "CN": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8D 4E 10 E8 ? ? ? ? E9 ? ? ? ?"
+    },
     "CompanyAirshipStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 40 48 85 C9 74 ? BA ? ? ? ?",
     "CompanySubmersibleStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 48 48 85 C9 74 ?",
     "ContentFinderNotifyPop": "48 89 5C 24 20 57 48 83 EC ? 48 8B D9 48 8D 0D ? ? ? ?",
@@ -70,6 +79,7 @@
       "Function": "EffectResultBasic",
       "Param": 1032
     },
+    "EventFinish": "E8 ? ? ? ? 44 0F B6 ? 15 44 8B",
     "EventPlay": {
       "Function": "EventPlay",
       "Param": 40
@@ -102,12 +112,11 @@
       "Function": "EventPlay",
       "Param": 1048
     },
-    "EventFinish": "E8 ? ? ? ? 44 0F B6 ? 15 44 8B",
     "EventStart": "E8 ? ? ? ? 0F B6 ? 1D 44 8B ? 20",
-    "Examine": "E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 4C 8D 46 10 8B D7 48 8D 0D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? 48 8B 56",
+    "Examine": "48 89 5C 24 18 56 41 56 41 57 48 83 EC ? 8B DA",
     "ExamineSearchInfo": "40 53 48 83 EC 20 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 37",
-    "InitZone": "E8 ? ? ? ? 48 8D 4E 60 E8 ? ? ? ? 48 8D 4E 6C",
-    "InventoryActionAck": "E9 ? ? ? ? 48 8D 56 10 8B CF E8 ? ? ? ? E9 ? ? ? ? 48 8B D6",
+    "InitZone": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 49 8B F8 8B F2 48 8B D9 E8 ? ? ? ? F6 83 1A 07 00 00 ?",
+    "InventoryActionAck": "48 83 EC ? 48 8B 05 ? ? ? ? 41 0F B6 50 04",
     "MarketBoardItemListing": "E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 00 48 8B D3 48 8B C8 48 83 C4 ? 5B 49 FF 60 60 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53",
     "MarketBoardItemListingCount": "48 89 5C 24 08 57 48 83 EC ? 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 8B F8 48 85 C0 74 ?",
     "MarketBoardItemListingHistory": "41 83 F8 ? 77 ? 53 48 83 EC ? 41 B1 ?",
@@ -129,13 +138,16 @@
     "StatusEffectList": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ?",
     "StatusEffectList2": "48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 E8 48 8B DA 8B F1 0F 84 ? ? ? ? 48 83 C2 ? E8 ? ? ? ?",
     "StatusEffectList3": "48 89 5C 24 08 57 48 83 EC ? 48 8B 1D ? ? ? ? 48 8B FA 48 85 DB 74 ? 48 8B 03",
-    "UpdateClassInfo": "E9 ? ? ? ? 48 8D 56 10 8B CF E8 ? ? ? ? E9 ? ? ? ? 48 8D 56 10 8B CF E8 ? ? ? ? E9 ? ? ? ? 44 0F B7 C2",
+    "UpdateClassInfo": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 0F B6 1A",
     "UpdateHpMpTp": "48 89 5C 24 ? 48 89 6C 24 ? 56 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 E8 48 8B DA 8B F1 0F 84 ? ? ? ? 48 89 7C 24 ?",
     "UpdateInventorySlot": "48 89 5C 24 08 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 58 0F B7 5A 08",
     "UpdateSearchInfo": "48 89 5C 24 18 57 48 83 EC ? 48 8B 0D ? ? ? ?",
     "WardLandInfo": "E8 ? ? ? ? 41 83 CE ? 48 8D 55 C0",
     "CEDirector": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 0F B6 42 08",
-    "Logout": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8B 0D ? ? ? ?",
+    "Logout": {
+      "Global": "E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 48 8B 7C 24 60 48 8B 5C 24 70 48 83 C4 ? 5E E9 ? ? ? ? 48 8B 0D ? ? ? ?",
+      "CN": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8B 0D ? ? ? ?"
+    },
     "MarketBoardPurchase": "40 55 53 57 48 8B EC 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 F0 48 8B 0D ? ? ? ?",
     "AirshipStatusList": "48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 83 EC ? 48 8D 99 00 07 00 00",
     "AirshipStatus": "48 89 5C 24 20 41 56 48 83 EC ? 0F B6 81 70 07 00 00",
@@ -145,7 +157,7 @@
     "AirshipExplorationResult": "0F B6 81 70 07 00 00 3C ? 73 ? 44 0F B6 C0",
     "SubmarineExplorationResult": "0F 85 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 81 C1 ? ? ? ?",
     "FreeCompanyDialog": "48 89 5C 24 18 48 89 74 24 20 57 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 A0 0F 00 00",
-    "FateInfo": "E8 ? ? ? ? E9 ? ? ? ? 0F B7 4E 10 48 8D 56 12 41 B8 ? ? ? ?",
+    "FateInfo": "48 8B 81 90 00 00 00 4C 8B 91 98 00 00 00 49 3B C2 74 ? 48 8B 08 66 39 51 18",
     "EnvironmentControl": "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3",
     "UpdateRecastTimes": "48 89 5C 24 08 57 48 83 EC ? 48 8B DA 33 FF 90",
     "UpdateHate": "41 89 0C 02 48 8D 40 08",
