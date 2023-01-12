@@ -326,6 +326,10 @@
             {
                 "name":"SocialList",
                 "opcode":872
+            },
+            {
+                "name":"IslandWorkshopSupplyDemand",
+                "opcode":513
             }
         ],
         "ClientZoneIpcType":[
