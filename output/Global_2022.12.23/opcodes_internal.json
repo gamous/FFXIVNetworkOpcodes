@@ -30,6 +30,7 @@
             "EffectResultBasic16":442,
             "EffectResultBasic32":293,
             "EffectResultBasic64":855,
+            "EventFinish":382,
             "EventPlay":875,
             "EventPlay4":982,
             "EventPlay8":353,
@@ -38,7 +39,6 @@
             "EventPlay64":547,
             "EventPlay128":622,
             "EventPlay255":309,
-            "EventFinish":382,
             "EventStart":905,
             "Examine":229,
             "ExamineSearchInfo":494,
@@ -83,7 +83,8 @@
             "UpdateRecastTimes":267,
             "UpdateHate":184,
             "UpdateHater":192,
-            "SocialList":809
+            "SocialList":809,
+            "IslandWorkshopSupplyDemand":999
         },
         "ClientZoneIpcType":{
             "ActionRequest":225,
