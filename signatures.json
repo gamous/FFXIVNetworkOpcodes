@@ -162,7 +162,11 @@
     "UpdateRecastTimes": "48 89 5C 24 08 57 48 83 EC ? 48 8B DA 33 FF 90",
     "UpdateHate": "41 89 0C 02 48 8D 40 08",
     "UpdateHater": "E8 ? ? ? ? 4C 8B C0 BA ? ? ? ? 48 63 C6",
-    "SocialList": "48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2"
+    "SocialList": "48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2",
+    "IslandWorkshopSupplyDemand": {
+      "Global": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ? 80 B9 68 02 00 00 ?",
+      "CN": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC 20 0F 10 02 48 8B F9"
+    }
   },
   "ClientZoneIpcType": {
     "__init__": {
