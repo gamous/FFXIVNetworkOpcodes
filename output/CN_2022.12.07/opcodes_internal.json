@@ -83,7 +83,8 @@
             "UpdateRecastTimes":182,
             "UpdateHate":784,
             "UpdateHater":659,
-            "SocialList":872
+            "SocialList":872,
+            "IslandWorkshopSupplyDemand":513
         },
         "ClientZoneIpcType":{
             "ActionRequest":867,

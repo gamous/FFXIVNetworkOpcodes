@@ -112,6 +112,10 @@
                 "opcode":855
             },
             {
+                "name":"EventFinish",
+                "opcode":382
+            },
+            {
                 "name":"EventPlay",
                 "opcode":875
             },
@@ -142,10 +146,6 @@
             {
                 "name":"EventPlay255",
                 "opcode":309
-            },
-            {
-                "name":"EventFinish",
-                "opcode":382
             },
             {
                 "name":"EventStart",
@@ -326,6 +326,10 @@
             {
                 "name":"SocialList",
                 "opcode":809
+            },
+            {
+                "name":"IslandWorkshopSupplyDemand",
+                "opcode":999
             }
         ],
         "ClientZoneIpcType":[

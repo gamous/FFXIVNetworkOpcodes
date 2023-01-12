@@ -40,6 +40,7 @@ namespace FFXIVOpcodes.Global
         EffectResultBasic16 = 0x01BA,
         EffectResultBasic32 = 0x0125,
         EffectResultBasic64 = 0x0357,
+        EventFinish = 0x017E,
         EventPlay = 0x036B,
         EventPlay4 = 0x03D6,
         EventPlay8 = 0x0161,
@@ -48,7 +49,6 @@ namespace FFXIVOpcodes.Global
         EventPlay64 = 0x0223,
         EventPlay128 = 0x026E,
         EventPlay255 = 0x0135,
-        EventFinish = 0x017E,
         EventStart = 0x0389,
         Examine = 0x00E5,
         ExamineSearchInfo = 0x01EE,
@@ -94,6 +94,7 @@ namespace FFXIVOpcodes.Global
         UpdateHate = 0x00B8,
         UpdateHater = 0x00C0,
         SocialList = 0x0329,
+        IslandWorkshopSupplyDemand = 0x03E7,
     };
     
     public enum ClientLobbyIpcType : ushort

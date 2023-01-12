@@ -94,6 +94,7 @@ namespace FFXIVOpcodes.CN
         UpdateHate = 0x0310,
         UpdateHater = 0x0293,
         SocialList = 0x0368,
+        IslandWorkshopSupplyDemand = 0x0201,
     };
     
     public enum ClientLobbyIpcType : ushort
