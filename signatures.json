@@ -14,7 +14,10 @@
         "Signature": "E8 ? ? ? ? 0F B6 ? 28 48 8D ? 2C 4C 8B ? 20 44 0F B7 ? 1C",
         "Type": "Call"
       },
-      "ProcessSystemLogMessage": "48 83 EC 38 45 0F B7 D0 41 81 EA ? ? ? ? 74 67 41 83 EA ? 74 4E 41 ? EA ? ? ? ?"
+      "ProcessSystemLogMessage": {
+        "Global": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?",
+        "CN": "48 83 EC 38 45 0F B7 D0 41 81 EA ? ? ? ? 74 67 41 83 EA ? 74 4E 41 ? EA ? ? ? ?"
+      }
     },
     "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
     "ActorControl": "81 FA ? ? ? ? 77 35 81 FA ? ? ? ?",
