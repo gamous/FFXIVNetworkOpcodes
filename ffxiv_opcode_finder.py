@@ -62,10 +62,15 @@ def get_ctrl_target(ea):
     return xrefs[0].to if len(xrefs) > 0 else idc.BADADDR
 
 
-def find_pattern(pattern):
-    address = ida_search.find_binary(
-        min_text_ea, max_text_ea, pattern, 16, idc.SEARCH_DOWN
-    )
+def find_pattern(pattern, times=1):
+    address = min_text_ea
+    while times>0:
+        address = ida_search.find_binary(
+            idc.next_head(address), max_text_ea, pattern, 16, idc.SEARCH_DOWN
+        )
+        times-=1
+        if address == idc.BADADDR:
+            return idc.BADADDR
     return address
 
 
@@ -341,7 +346,9 @@ class ServerZoneIpcType:
         else:
             return False
 
+#todo 递归层数检查
     def find_in_table_process(self, ea, name):
+        print(name)
         func = idaapi.get_func(ea)
         if func:
             ea = func.start_ea
@@ -433,7 +440,10 @@ class ConfigReader:
             if not _sig:
                 return sig
 
-        address = find_pattern(_sig)
+        if "Index" in sig and int(sig["Index"]):
+                address = find_pattern(_sig, sig["Index"]+1)
+        else:
+            address = find_pattern(_sig)
         if address == idc.BADADDR:
             print(f"Signature {name} Not Found")
             errors["SigNotFound"].append(name)
