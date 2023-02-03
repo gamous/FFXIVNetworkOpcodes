@@ -11,9 +11,17 @@
         "Signature": "E8 ? ? ? ? 0F B6 ? 28 48 8D ? 2C 4C 8B ? 20 44 0F B7 ? 1C",
         "Type": "Call"
       },
-      "ProcessSystemLogMessage": {
+      "EventLogMessage": {
         "Global": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?",
         "CN": "48 83 EC ? 45 0F B7 D0 41 83 EA ?"
+      },
+      "BattleTalk": {
+        "Signature": "E8 ? ? ? ? 0F B6 43 2E",
+        "Type": "Call"
+      },
+      "BalloonTalk": {
+        "Signature": "E8 ? ? ? ? 80 7B 30 00 4C 8D 43 34",
+        "Type": "Call"
       }
     },
     "ActorCast": "40 55 56 48 81 EC ? ? ? ? 48 8B EA",
@@ -31,6 +39,30 @@
     "AoeEffect16": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 B0 04 00 00",
     "AoeEffect24": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 F0 06 00 00",
     "AoeEffect32": "48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 68 48 8B DA 8B F9 8B D1 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8D 93 30 09 00 00",
+    "BattleTalk2":{
+      "Function": "BattleTalk",
+      "Param": 40
+    },
+    "BattleTalk4":{
+      "Function": "BattleTalk",
+      "Param": 48
+    },
+    "BattleTalk8":{
+      "Function": "BattleTalk",
+      "Param": 64
+    },
+    "BalloonTalk2":{
+      "Function": "BalloonTalk",
+      "Param": 48
+    },
+    "BalloonTalk4":{
+      "Function": "BalloonTalk",
+      "Param": 56
+    },
+    "BalloonTalk8":{
+      "Function": "BalloonTalk",
+      "Param": 72
+    },
     "BossStatusEffectList": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 F0",
     "CFPreferredRole": {
       "Global": "E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 48 8B 7C 24 60 48 8B 5C 24 70 48 83 C4 ? 5E E9 ? ? ? ? 48 8D 4B 10 48 8B 7C 24 60",
@@ -132,8 +164,24 @@
     "Playtime": "E9 ? ? ? ? 48 8B 0D ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 10 45 33 C0",
     "PrepareZoning": "44 0F B6 C2 48 8B D1 48 8D 0D ? ? ? ?",
     "SystemLogMessage": {
-      "Function": "ProcessSystemLogMessage",
+      "Function": "EventLogMessage",
       "Param": 24
+    },
+    "SystemLogMessage32": {
+      "Function": "EventLogMessage",
+      "Param": 32
+    },
+    "SystemLogMessage48": {
+      "Function": "EventLogMessage",
+      "Param": 48
+    },
+    "SystemLogMessage80": {
+      "Function": "EventLogMessage",
+      "Param": 80
+    },
+    "SystemLogMessage144": {
+      "Function": "EventLogMessage",
+      "Param": 144
     },
     "StatusEffectList": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ?",
     "StatusEffectList2": "48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 E8 48 8B DA 8B F1 0F 84 ? ? ? ? 48 83 C2 ? E8 ? ? ? ?",
@@ -166,7 +214,10 @@
     "IslandWorkshopSupplyDemand": {
       "Global": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ? 80 B9 68 02 00 00 ?",
       "CN": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC 20 0F 10 02 48 8B F9"
-    }
+    },
+    "UpdateParty":"48 89 5C 24 ? 57 48 83 EC 30 49 8B F8 48 C7 44 24 ? ? ? ? ? 4C 8B CF 41 B8 ? ? ? ? 48 8B D9 E8 ? ? ? ? 84 C0 74 60",
+    "RSV": "E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC 48 8B 11",
+    "RSF":"48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 40 48 83 B9 20 02 00 00 00"
   },
   "ClientZoneIpcType": {
     "__init__": {

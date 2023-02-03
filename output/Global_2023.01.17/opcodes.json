@@ -52,6 +52,30 @@
                 "opcode":528
             },
             {
+                "name":"BattleTalk2",
+                "opcode":402
+            },
+            {
+                "name":"BattleTalk4",
+                "opcode":527
+            },
+            {
+                "name":"BattleTalk8",
+                "opcode":900
+            },
+            {
+                "name":"BalloonTalk2",
+                "opcode":279
+            },
+            {
+                "name":"BalloonTalk4",
+                "opcode":872
+            },
+            {
+                "name":"BalloonTalk8",
+                "opcode":205
+            },
+            {
                 "name":"BossStatusEffectList",
                 "opcode":166
             },
@@ -228,6 +252,22 @@
                 "opcode":372
             },
             {
+                "name":"SystemLogMessage32",
+                "opcode":520
+            },
+            {
+                "name":"SystemLogMessage48",
+                "opcode":668
+            },
+            {
+                "name":"SystemLogMessage80",
+                "opcode":149
+            },
+            {
+                "name":"SystemLogMessage144",
+                "opcode":199
+            },
+            {
                 "name":"StatusEffectList",
                 "opcode":676
             },
@@ -330,6 +370,18 @@
             {
                 "name":"IslandWorkshopSupplyDemand",
                 "opcode":128
+            },
+            {
+                "name":"UpdateParty",
+                "opcode":529
+            },
+            {
+                "name":"RSV",
+                "opcode":631
+            },
+            {
+                "name":"RSF",
+                "opcode":270
             }
         ],
         "ClientZoneIpcType":[

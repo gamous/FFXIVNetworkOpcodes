@@ -25,6 +25,12 @@ namespace FFXIVOpcodes.Global
         AoeEffect16 = 0x0398,
         AoeEffect24 = 0x02EA,
         AoeEffect32 = 0x0210,
+        BattleTalk2 = 0x0192,
+        BattleTalk4 = 0x020F,
+        BattleTalk8 = 0x0384,
+        BalloonTalk2 = 0x0117,
+        BalloonTalk4 = 0x0368,
+        BalloonTalk8 = 0x00CD,
         BossStatusEffectList = 0x00A6,
         CFPreferredRole = 0x02EF,
         CompanyAirshipStatus = 0x00AD,
@@ -69,6 +75,10 @@ namespace FFXIVOpcodes.Global
         Playtime = 0x0171,
         PrepareZoning = 0x01D7,
         SystemLogMessage = 0x0174,
+        SystemLogMessage32 = 0x0208,
+        SystemLogMessage48 = 0x029C,
+        SystemLogMessage80 = 0x0095,
+        SystemLogMessage144 = 0x00C7,
         StatusEffectList = 0x02A4,
         StatusEffectList2 = 0x009C,
         StatusEffectList3 = 0x024D,
@@ -95,6 +105,9 @@ namespace FFXIVOpcodes.Global
         UpdateHater = 0x0359,
         SocialList = 0x01F4,
         IslandWorkshopSupplyDemand = 0x0080,
+        UpdateParty = 0x0211,
+        RSV = 0x0277,
+        RSF = 0x010E,
     };
     
     public enum ClientLobbyIpcType : ushort
