@@ -2,6 +2,8 @@
 
 Subject to [FFXIVOpcodes](https://github.com/karashiiro/FFXIVOpcodes)' Naming and [ffxiv-opcode-worker/cn-opcodes.csv](https://github.com/zhyupe/ffxiv-opcode-worker/blob/master/cn-opcodes.csv)
 
+## Sapphire
+
 
 
 ## Machina
