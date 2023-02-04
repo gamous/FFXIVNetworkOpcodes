@@ -110,7 +110,7 @@ class MyJSONEncoder(json.JSONEncoder):
         list_lvl -= 1
       yield s
 
-result_path = outpath("record_opcodes_raw.json")
+result_path = outpath("opcodes_record_raw.json")
 with open(result_path, "w+") as f:
     json.dump(result, f, sort_keys=False, indent=2, separators=(',', ':'), cls=MyJSONEncoder)
     print(f"Result saved on {result}")
