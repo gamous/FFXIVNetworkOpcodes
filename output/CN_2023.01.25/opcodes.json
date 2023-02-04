@@ -4,32 +4,52 @@
     "lists":{
         "ServerZoneIpcType":[
             {
-                "name":"ActorCast",
-                "opcode":827
+                "name":"PlayerSpawn",
+                "opcode":671
             },
             {
-                "name":"ActorControl",
-                "opcode":585
+                "name":"NpcSpawn",
+                "opcode":231
             },
             {
-                "name":"ActorControlSelf",
-                "opcode":919
+                "name":"NpcSpawn2",
+                "opcode":399
             },
             {
-                "name":"ActorControlTarget",
-                "opcode":511
+                "name":"ActorFreeSpawn",
+                "opcode":563
             },
             {
-                "name":"ActorGauge",
-                "opcode":558
+                "name":"ObjectSpawn",
+                "opcode":470
+            },
+            {
+                "name":"ObjectDespawn",
+                "opcode":704
+            },
+            {
+                "name":"CreateTreasure",
+                "opcode":237
+            },
+            {
+                "name":"OpenTreasure",
+                "opcode":983
+            },
+            {
+                "name":"TreasureFadeOut",
+                "opcode":174
             },
             {
                 "name":"ActorMove",
                 "opcode":206
             },
             {
-                "name":"ActorSetPos",
-                "opcode":132
+                "name":"_record_unk10_",
+                "opcode":438
+            },
+            {
+                "name":"Transfer",
+                "opcode":401
             },
             {
                 "name":"Effect",
@@ -52,24 +72,156 @@
                 "opcode":742
             },
             {
+                "name":"ActorCast",
+                "opcode":827
+            },
+            {
+                "name":"ActorControl",
+                "opcode":585
+            },
+            {
+                "name":"ActorControlTarget",
+                "opcode":511
+            },
+            {
+                "name":"ActorControlSelf",
+                "opcode":919
+            },
+            {
+                "name":"DirectorVars",
+                "opcode":694
+            },
+            {
+                "name":"ContentDirectorSync",
+                "opcode":406
+            },
+            {
+                "name":"_record_unk23_",
+                "opcode":808
+            },
+            {
+                "name":"EnvironmentControl",
+                "opcode":587
+            },
+            {
+                "name":"_record_unk29_",
+                "opcode":490
+            },
+            {
+                "name":"LandSetMap",
+                "opcode":418
+            },
+            {
+                "name":"EventStart",
+                "opcode":699
+            },
+            {
+                "name":"EventFinish",
+                "opcode":492
+            },
+            {
+                "name":"EventPlay",
+                "opcode":702
+            },
+            {
+                "name":"EventPlay4",
+                "opcode":693
+            },
+            {
+                "name":"EventPlay8",
+                "opcode":371
+            },
+            {
+                "name":"EventPlay16",
+                "opcode":602
+            },
+            {
+                "name":"EventPlay32",
+                "opcode":786
+            },
+            {
+                "name":"EventPlay64",
+                "opcode":106
+            },
+            {
+                "name":"EventPlay128",
+                "opcode":167
+            },
+            {
+                "name":"EventPlay255",
+                "opcode":238
+            },
+            {
+                "name":"SystemLogMessage",
+                "opcode":407
+            },
+            {
+                "name":"SystemLogMessage32",
+                "opcode":142
+            },
+            {
+                "name":"SystemLogMessage48",
+                "opcode":373
+            },
+            {
+                "name":"SystemLogMessage80",
+                "opcode":110
+            },
+            {
+                "name":"SystemLogMessage144",
+                "opcode":108
+            },
+            {
+                "name":"NpcYell",
+                "opcode":215
+            },
+            {
+                "name":"ActorSetPos",
+                "opcode":132
+            },
+            {
+                "name":"PrepareZoning",
+                "opcode":940
+            },
+            {
+                "name":"StatusEffectList3",
+                "opcode":973
+            },
+            {
+                "name":"WeatherChange",
+                "opcode":553
+            },
+            {
+                "name":"UpdateParty",
+                "opcode":732
+            },
+            {
+                "name":"UpdateAlliance",
+                "opcode":934
+            },
+            {
+                "name":"UpdateSpAlliance",
+                "opcode":970
+            },
+            {
+                "name":"UpdateHpMpTp",
+                "opcode":921
+            },
+            {
+                "name":"StatusEffectList",
+                "opcode":754
+            },
+            {
+                "name":"EurekaStatusEffectList",
+                "opcode":247
+            },
+            {
+                "name":"StatusEffectList2",
+                "opcode":218
+            },
+            {
                 "name":"BossStatusEffectList",
                 "opcode":913
-            },
-            {
-                "name":"CFPreferredRole",
-                "opcode":507
-            },
-            {
-                "name":"CompanyAirshipStatus",
-                "opcode":384
-            },
-            {
-                "name":"CompanySubmersibleStatus",
-                "opcode":130
-            },
-            {
-                "name":"ContentFinderNotifyPop",
-                "opcode":207
             },
             {
                 "name":"EffectResult",
@@ -112,44 +264,84 @@
                 "opcode":390
             },
             {
-                "name":"EventFinish",
-                "opcode":492
+                "name":"PartyPos",
+                "opcode":203
             },
             {
-                "name":"EventPlay",
-                "opcode":702
+                "name":"AlliancePos",
+                "opcode":955
             },
             {
-                "name":"EventPlay4",
-                "opcode":693
+                "name":"SpAlliancePos",
+                "opcode":892
             },
             {
-                "name":"EventPlay8",
-                "opcode":371
+                "name":"PlaceMarker",
+                "opcode":409
             },
             {
-                "name":"EventPlay16",
-                "opcode":602
+                "name":"PlaceFieldMarkerPreset",
+                "opcode":229
             },
             {
-                "name":"EventPlay32",
-                "opcode":786
+                "name":"PlaceFieldMarker",
+                "opcode":379
             },
             {
-                "name":"EventPlay64",
-                "opcode":106
+                "name":"ActorGauge",
+                "opcode":558
             },
             {
-                "name":"EventPlay128",
-                "opcode":167
+                "name":"CharaVisualEffect",
+                "opcode":466
             },
             {
-                "name":"EventPlay255",
-                "opcode":238
+                "name":"Fall",
+                "opcode":856
             },
             {
-                "name":"EventStart",
-                "opcode":699
+                "name":"UpdateHate",
+                "opcode":374
+            },
+            {
+                "name":"UpdateHater",
+                "opcode":221
+            },
+            {
+                "name":"FirstAttack",
+                "opcode":503
+            },
+            {
+                "name":"ModelEquip",
+                "opcode":663
+            },
+            {
+                "name":"EquipDisplayFlags",
+                "opcode":591
+            },
+            {
+                "name":"UnMount",
+                "opcode":184
+            },
+            {
+                "name":"Mount",
+                "opcode":623
+            },
+            {
+                "name":"PlayMotionSync",
+                "opcode":513
+            },
+            {
+                "name":"CountdownInitiate",
+                "opcode":823
+            },
+            {
+                "name":"CountdownCancel",
+                "opcode":959
+            },
+            {
+                "name":"InitZone",
+                "opcode":139
             },
             {
                 "name":"Examine",
@@ -158,10 +350,6 @@
             {
                 "name":"ExamineSearchInfo",
                 "opcode":881
-            },
-            {
-                "name":"InitZone",
-                "opcode":139
             },
             {
                 "name":"InventoryActionAck",
@@ -184,32 +372,12 @@
                 "opcode":484
             },
             {
-                "name":"NpcSpawn",
-                "opcode":231
-            },
-            {
-                "name":"NpcSpawn2",
-                "opcode":399
-            },
-            {
-                "name":"ObjectSpawn",
-                "opcode":470
-            },
-            {
-                "name":"PlaceFieldMarker",
-                "opcode":379
-            },
-            {
-                "name":"PlaceFieldMarkerPreset",
-                "opcode":229
+                "name":"MarketBoardPurchase",
+                "opcode":324
             },
             {
                 "name":"PlayerSetup",
                 "opcode":376
-            },
-            {
-                "name":"PlayerSpawn",
-                "opcode":671
             },
             {
                 "name":"PlayerStats",
@@ -220,32 +388,8 @@
                 "opcode":299
             },
             {
-                "name":"PrepareZoning",
-                "opcode":940
-            },
-            {
-                "name":"SystemLogMessage",
-                "opcode":407
-            },
-            {
-                "name":"StatusEffectList",
-                "opcode":754
-            },
-            {
-                "name":"StatusEffectList2",
-                "opcode":218
-            },
-            {
-                "name":"StatusEffectList3",
-                "opcode":973
-            },
-            {
                 "name":"UpdateClassInfo",
                 "opcode":236
-            },
-            {
-                "name":"UpdateHpMpTp",
-                "opcode":921
             },
             {
                 "name":"UpdateInventorySlot",
@@ -268,8 +412,12 @@
                 "opcode":175
             },
             {
-                "name":"MarketBoardPurchase",
-                "opcode":324
+                "name":"FreeCompanyInfo",
+                "opcode":559
+            },
+            {
+                "name":"FreeCompanyDialog",
+                "opcode":235
             },
             {
                 "name":"AirshipStatusList",
@@ -280,48 +428,44 @@
                 "opcode":380
             },
             {
-                "name":"SubmarineProgressionStatus",
-                "opcode":423
+                "name":"AirshipExplorationResult",
+                "opcode":300
             },
             {
                 "name":"SubmarineStatusList",
                 "opcode":817
             },
             {
-                "name":"FreeCompanyInfo",
-                "opcode":559
-            },
-            {
-                "name":"AirshipExplorationResult",
-                "opcode":300
+                "name":"SubmarineProgressionStatus",
+                "opcode":423
             },
             {
                 "name":"SubmarineExplorationResult",
                 "opcode":478
             },
             {
-                "name":"FreeCompanyDialog",
-                "opcode":235
+                "name":"CFPreferredRole",
+                "opcode":507
+            },
+            {
+                "name":"CompanyAirshipStatus",
+                "opcode":384
+            },
+            {
+                "name":"CompanySubmersibleStatus",
+                "opcode":130
+            },
+            {
+                "name":"ContentFinderNotifyPop",
+                "opcode":207
             },
             {
                 "name":"FateInfo",
                 "opcode":520
             },
             {
-                "name":"EnvironmentControl",
-                "opcode":587
-            },
-            {
                 "name":"UpdateRecastTimes",
                 "opcode":830
-            },
-            {
-                "name":"UpdateHate",
-                "opcode":374
-            },
-            {
-                "name":"UpdateHater",
-                "opcode":221
             },
             {
                 "name":"SocialList",
@@ -330,6 +474,14 @@
             {
                 "name":"IslandWorkshopSupplyDemand",
                 "opcode":449
+            },
+            {
+                "name":"RSV",
+                "opcode":133
+            },
+            {
+                "name":"RSF",
+                "opcode":854
             }
         ],
         "ClientZoneIpcType":[
