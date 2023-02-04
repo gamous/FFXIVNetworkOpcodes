@@ -17,10 +17,12 @@ def unpack_filedatas(typechar,offset=0):
     raw = fd.read(calcsize(typechar))
     return unpack(typechar, raw)
 
+fd.seek(0)
 replayVersion=unpack_filedata('i', 0x10)
-replayLength=unpack_filedata('i', 0x48)+0x364
-print(f"replayVersion: 0x{replayVersion:x}")
-print(f"replayLength:  0x{replayLength:x}({replayLength})")
+replayLength=unpack_filedata('i', 0x48)
+print(f"replayVersion: 0x{replayVersion:08X}")
+print(f"replayLength:  0x{replayLength:08X}({replayLength})")
+replayLength+=0x364
 
 fd.seek(0)
 fw=open(file.split(".dat")[0]+"_new.dat","ab+")
@@ -34,7 +36,9 @@ def parse_recordpacket(offset=0):
     print(f"{opcode:x}=>{newopcode:x}|{dataLength:x}|{ms:x}|{objectID:x}")
 
     fw.write(pack('H H I I', newopcode,dataLength,ms,objectID))
-    fw.write(fd.read(dataLength))
+    data=fd.read(dataLength)
+    print(" ".join([f"{i:02x}"for i in data]))
+    fw.write(data)
 
 
 new={
@@ -285,8 +289,8 @@ name2opcode=_name2opcode(new)
 opcode2name=_opcode2name(old)
 newop = lambda op: int(name2opcode[opcode2name[f"{op:X}"]],16)
 
-while(fd.tell()<replayLength):
-    parse_recordpacket()
+#while(fd.tell()<replayLength):
+parse_recordpacket()
 
 fd.close()
 fw.close()
