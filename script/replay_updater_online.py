@@ -15,7 +15,11 @@ if len(sys.argv)==3:
 repo_url="https://raw.githubusercontent.com/gamous/FFXIVNetworkOpcodes/main/output/"
 meta=httpx.get(repo_url+"meta.json").json()
 if target=='':
-    default=list(meta)[0]
+    print("SupportVersion:")
+    meta_l=list(meta)
+    for i in meta_l:
+        print(" "+i)
+    default=meta_l[0]
     target=input(f"TargetVer(default{default}):").strip()
     if target=='':
         target=default

@@ -35,6 +35,29 @@ else:
     Region='Unknown'
 print(f"{Region} {version_s} {VersionID:08X} {BuildID}")
 
+output_dir = os.path.join(
+    OutputPath,
+    f"{Region}_{BuildID}",
+)
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+outpath = lambda name: os.path.join(
+    output_dir,
+    name,
+)
+
+opcodes_internal_path = outpath("opcodes_internal.json")
+if not os.path.exists(opcodes_internal_path):
+    print("Please run ffxiv_opcodes_finder.py first.")
+    exit(0)
+print(opcodes_internal_path)
+with open(opcodes_internal_path, "r") as f:
+    opcodes_internal=json.load(f)
+_opcode2name={f"{opcodes_internal['lists']['ServerZoneIpcType'][k]:03X}":k for k in opcodes_internal["lists"]["ServerZoneIpcType"]}
+def opcode2name(opcode):
+    if opcode in _opcode2name:
+        return _opcode2name[opcode]
+    return "unk"
 #c:\\ws\\ver_630_winbuild\\branches\\ver_630\\trunk\\prog\\client\\Build\\FFXIVGame\\x64-Release\\ffxiv_dx11.pdb
 #c:\\ws\\shanda_620_winbuild\\branches\\shanda_620\\trunk\\prog\\client\\Build\\FFXIVGame\\x64-Release\\ffxiv_dx11.pdb
 
@@ -48,11 +71,15 @@ def find_function(pattern):
         addr=idc.get_wide_word(addr+1) + idc.next_head(addr)
     return addr
 
-record_packet = find_function("E8 ?? ?? ?? ?? 84 C0 74 60 33 C0")
+def set_type(ea, type_str):
+    _type = idc.parse_decl(type_str, 0)  
+    idc.apply_type(ea, _type, 0)
+
+record_packet = find_function("E8 ? ? ? ? 84 C0 74 60 33 C0")
+set_type(record_packet,"char __fastcall Replay_RecordPacket(__int64 this, unsigned int targetid, unsigned short opcode, const void *packet, size_t size)")
 packets=CodeRefsTo(record_packet,0)
 opcode={}
-##6.31
-names=['PlayerSpawn', 'NpcSpawn', 'NpcSpawn2', 'ActorFreeSpawn', 'ObjectSpawn', 'ObjectDespawn', 'CreateTreasure', 'OpenTreasure', 'TreasureFadeOut', 'ActorMove', '_record_unk10_', 'Transfer', 'Effect', 'AoeEffect8', 'AoeEffect16', 'AoeEffect32', 'AoeEffect64', 'ActorCast', 'ActorControl', 'ActorControlTarget', 'ActorControlSelf', 'DirectorVars', 'ContentDirectorSync', '_record_unk23_', 'EnvironmentControl', '_record_unk25_', '_record_unk26_', '_record_unk27_', '_record_unk28_', '_record_unk29_', 'LandSetMap', '_record_unk31_', '_record_unk32_', '_record_unk33_', 'EventStart', 'EventFinish', 'EventPlay8', 'EventPlay255', 'EventPlay', 'EventPlay128', 'EventPlay16', 'EventPlay32', 'EventPlay4', 'EventPlay64', 'BattleTalk8', 'BattleTalk4', 'BattleTalk2', 'BalloonTalk4', 'BalloonTalk2', 'BalloonTalk8', 'SystemLogMessage48', 'SystemLogMessage32', 'SystemLogMessage', 'SystemLogMessage144', 'SystemLogMessage80', 'NpcYell', 'ActorSetPos', 'PrepareZoning', '_record_unk58_', 'StatusEffectList3', 'WeatherChange', 'UpdateParty', 'UpdateAlliance', 'UpdateLightParty', 'UpdateHpMpTp', 'StatusEffectList', 'EurekaStatusEffectList', 'StatusEffectList2', 'BossStatusEffectList', 'EffectResult', 'EffectResult4', 'EffectResult8', 'EffectResult16', 'EffectResultBasic8', 'EffectResultBasic16', 'EffectResultBasic64', 'EffectResultBasic32', 'EffectResultBasic', 'EffectResultBasic4', 'PartyPos', 'AlliancePos', 'LightPartyPos', 'PlaceMarker', 'PlaceFieldMarkerPreset', 'PlaceFieldMarker', 'ActorGauge', 'CharaVisualEffect', 'Fall', 'UpdateHate', 'UpdateHater', 'FirstAttack', 'ModelEquip', 'EquipDisplayFlags', '_record_unk93', '_record_unk94', '_record_unk95', '_record_unk96', '_record_unk97', '_record_unk98', '_record_unk99', '_record_unk100', '_record_unk101', '_record_unk102', '_record_unk103', '_record_unk104', '_record_unk105', '_record_unk106', '_record_unk107', '_record_unk108', '_record_unk109', '_record_unk110', '_record_unk111', 'UnMount', 'Mount', 'PlayMotionSync', 'CountdownInitiate', 'CountdownCancel', 'InitZone']
+
 i=0
 for pkt in packets:
     print('%x' % pkt)
@@ -69,7 +96,9 @@ for pkt in packets:
             pkt_opcode=op1
         if op0.startswith('[rsp+'):
             pkt_size=op1
-    opcode[f'{i}']=[f"{pkt:x}",pkt_opcode.rstrip("h").lstrip("0").rjust(3,'0'),pkt_size.rstrip("h").lstrip("0").rjust(3,'0'),names[i]]
+    pkt_opcode=pkt_opcode.rstrip("h").lstrip("0").rjust(3,'0')
+    pkt_size  =pkt_size.rstrip("h").lstrip("0").rjust(3,'0')
+    opcode[f'{i}']=[f"{pkt:x}",pkt_opcode,pkt_size,opcode2name(pkt_opcode)]
     i+=1
 
 size_seq=[opcode[k][2] for k in opcode]
@@ -81,17 +110,6 @@ result={
     "lengths":size_seq
 }
 print(json.dumps(result))
-
-output_dir = os.path.join(
-    OutputPath,
-    f"{Region}_{BuildID}",
-)
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-outpath = lambda name: os.path.join(
-    output_dir,
-    name,
-)
 
 class MyJSONEncoder(json.JSONEncoder):
   def iterencode(self, o, _one_shot=False):
@@ -113,7 +131,7 @@ class MyJSONEncoder(json.JSONEncoder):
 result_path = outpath("opcodes_record_raw.json")
 with open(result_path, "w+") as f:
     json.dump(result, f, sort_keys=False, indent=2, separators=(',', ':'), cls=MyJSONEncoder)
-    print(f"Result saved on {result}")
+    print(f"Result saved on {result_path}")
 
 
 

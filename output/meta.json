@@ -8,5 +8,10 @@
         "version": "2023.01.11",
 	    "region": "Global",
 	    "ver_id": 8475726
+    },
+    "CN_2023.01.25":{
+        "version": "2023.01.25",
+        "region": "CN",
+        "ver_id": 8521762
     }
 }
