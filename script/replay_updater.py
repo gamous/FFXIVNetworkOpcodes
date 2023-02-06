@@ -1,7 +1,7 @@
 from struct import *
 import sys,os,json
 
-if(len(sys.argv)!=4):
+if(len(sys.argv)<4):
     print("usage: python replay_updater.py record.dat old_record.json new_record.json")
     print(r"example: py .\replay_updater.py '.\2023.01.15 20.03.49.dat' ..\output\Global_2023.01.11\opcodes_record.json ..\output\Global_2023.01.17\opcodes_record.json")
     exit(0)
@@ -12,6 +12,9 @@ with open(oldop_file,'r') as f:
 	old_dict=json.load(f)
 with open(newop_file,'r') as f:
 	new_dict=json.load(f)
+search=None
+if len(sys.argv)>4:
+    search=sys.argv[4].encode('utf-8')
 
 fd=open(file,"rb")
 magicNumber = fd.read(12)
@@ -47,10 +50,16 @@ fd.seek(0)
 fw.seek(0)
 #0x10
 fw.write(fd.read(0x10))
-#0x364
+#0x30
 fw.write(pack('i', new_dict['ver_id']))
+fd.read(calcsize("i"))
+fw.write(fd.read(0x30-fd.tell()))
+##0x364
+fw.write(b'\0'*8)
+fd.read(8)
 fw.write(fd.read(0x364-fd.tell()))
 
+count=[]
 def parse_recordpacket(offset=0):
     if(offset):fd.seek(offset)
     opcode,dataLength,ms,objectID=unpack_filedatas('H H I I')
@@ -60,7 +69,20 @@ def parse_recordpacket(offset=0):
 
     fw.write(pack('H H I I', newopcode,dataLength,ms,objectID))
     data=fd.read(dataLength)
-    #print(" ".join([f"{i:02x}"for i in data]))
+
+    #Privacy Protect
+    if(opcode2name[f"{opcode:03X}"]=='UpdateParty'):
+        for i in range(8):
+            data=data[0:0x1b8*i]+b'Player'.ljust(0x28,b'\0')+data[0x1b8*i+0x28:]
+    elif(opcode2name[f"{opcode:03X}"]=='PlayerSpawn'):
+        data=data[0:0x230]+b'Player'.ljust(0x20,b'\0')+data[0x230+0x20:]
+    elif(opcode2name[f"{opcode:03X}"]=='CountdownInitiate'):
+        data=data[0:0xb]+b'Player'.ljust(0x20,b'\0')+data[0xb+0x20:]
+
+    if(search!=None and search in data):
+        print(" ".join([f"{i:02x}"for i in data]))
+        count.append(opcode)
+
     fw.write(data)
 
 new=new_dict['opcodes']
@@ -75,6 +97,6 @@ newop = lambda op: int(name2opcode[opcode2name[f"{op:03X}"]],16)
 
 while(fd.tell()<replayLength):
 	parse_recordpacket()
-
+print(list(map(lambda op:opcode2name[f"{op:03X}"],set(count))))
 fd.close()
 fw.close()
