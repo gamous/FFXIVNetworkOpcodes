@@ -59,7 +59,7 @@ Standalone version of replay_updater.py which fetch opcodes file from this repo 
 Use `pip install httpx` to install requirement.
 
 ```
-usage: python replay_updater.py record.dat <check_name>
+usage: python replay_updater.py record.dat
 example: py .\replay_updater.py '.\2023.01.15 20.03.49.dat'
 ```
 
