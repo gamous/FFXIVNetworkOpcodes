@@ -3,17 +3,29 @@ import httpx
 from struct import *
 import sys,os,json
 
-if(len(sys.argv)!=2 and len(sys.argv)!=3):
+if(len(sys.argv)<2):
     print("usage: python replay_updater.py record.dat")
     print(r"example: py .\replay_updater.py '.\2023.01.15 20.03.49.dat'")
     exit(0)
 file = sys.argv[1]
 target=''
-if len(sys.argv)==3:
+search=None
+if len(sys.argv)>=3:
     target = sys.argv[2]
+if len(sys.argv)>4:
+    search=sys.argv[4].encode('utf-8')
 
 repo_url="https://raw.githubusercontent.com/gamous/FFXIVNetworkOpcodes/main/output/"
-meta=httpx.get(repo_url+"meta.json").json()
+retry_times=5
+def safe_get(url):
+    for i in range(retry_times):
+        try:
+            return httpx.get(url)
+        except httpx.ConnectTimeout:
+            print('Retry Download')
+    exit(0)
+
+meta=safe_get(repo_url+"meta.json").json()
 if target=='':
     print("SupportVersion:")
     meta_l=list(meta)
@@ -60,20 +72,28 @@ if source =='':
     print("Not Found replayVersion")
     exit(0)
 
-source_file=httpx.get(repo_url+f"{source}/opcodes_record.json").json()
-target_file=httpx.get(repo_url+f"{target}/opcodes_record.json").json()
+source_file=safe_get(repo_url+f"{source}/opcodes_record.json").json()
+target_file=safe_get(repo_url+f"{target}/opcodes_record.json").json()
 
-fw=open(file.split(".dat")[0]+"_new.dat","wb+")
+newfile=file.split(".dat")[0]+f"_{target}.dat"
+fw=open(newfile,"wb+")
 
 #0x0
 fd.seek(0)
 fw.seek(0)
 #0x10
 fw.write(fd.read(0x10))
-#0x364
-fw.write(pack('i', target_file['ver_id']))
+#0x30
+fw.write(pack('i', meta[target]['ver_id']))
+fd.read(calcsize("i"))
+fw.write(fd.read(0x30-fd.tell()))
+##0x364
+fw.write(b'\0'*8)
+fd.read(8)
 fw.write(fd.read(0x364-fd.tell()))
 
+
+count=[]
 def parse_recordpacket(offset=0):
     if(offset):fd.seek(offset)
     opcode,dataLength,ms,objectID=unpack_filedatas('H H I I')
@@ -83,7 +103,20 @@ def parse_recordpacket(offset=0):
 
     fw.write(pack('H H I I', newopcode,dataLength,ms,objectID))
     data=fd.read(dataLength)
-    #print(" ".join([f"{i:02x}"for i in data]))
+
+    #Privacy Protect
+    if(opcode2name[f"{opcode:03X}"]=='UpdateParty'):
+        for i in range(8):
+            data=data[0:0x1b8*i]+b'Player'.ljust(0x28,b'\0')+data[0x1b8*i+0x28:]
+    elif(opcode2name[f"{opcode:03X}"]=='PlayerSpawn'):
+        data=data[0:0x230]+b'Player'.ljust(0x20,b'\0')+data[0x230+0x20:]
+    elif(opcode2name[f"{opcode:03X}"]=='CountdownInitiate'):
+        data=data[0:0xb]+b'Player'.ljust(0x20,b'\0')+data[0xb+0x20:]
+
+    if(search!=None and search in data):
+        print(" ".join([f"{i:02x}"for i in data]))
+        count.append(opcode)
+
     fw.write(data)
 
 
@@ -99,6 +132,7 @@ newop = lambda op: int(name2opcode[opcode2name[f"{op:03X}"]],16)
 
 while(fd.tell()<replayLength):
 	parse_recordpacket()
-
+print(list(map(lambda op:opcode2name[f"{op:03X}"],set(count))))
 fd.close()
 fw.close()
+print('Saved on '+newfile)
