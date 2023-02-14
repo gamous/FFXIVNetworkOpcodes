@@ -176,14 +176,16 @@ class SimpleSwitch:
         self.content = []
         self.switch_func = idaapi.get_func(switch_address)
         self.switch_func_item = list(idautils.FuncItems(switch_address))
-        self.process_case_block(self.switch_func.start_ea, 0, 0, False)
+        self.process_case_block(self.switch_func.start_ea, 0, 0, False,'')
         print(self.content)
 
-    def process_case_block(self, start, rcase, ccase, iscmp):
+    def process_case_block(self, start, rcase, ccase, iscmp, reg):
+        _reg=reg #r10d
         _reg_case = rcase
         _t_mov_op1 = 0
         _t_cmp_tmp = ccase
         _t_cmp_yes = iscmp
+        
         for ea in self.switch_func_item:
             if ea < start:
                 continue
@@ -192,13 +194,17 @@ class SimpleSwitch:
             op1 = idc.print_operand(ea, 1)
             if ins in JMP_INS:
                 self.process_case_block(
-                    get_ctrl_target(ea), _reg_case, _t_cmp_tmp, _t_cmp_yes
+                    get_ctrl_target(ea), _reg_case, _t_cmp_tmp, _t_cmp_yes, _reg
                 )
                 continue
             if ins in RET_INS:
                 continue
             if ins == "mov":
                 _t_mov_op1 = int(op1.strip('h'), 16)
+                continue
+            if ins == "movzx" and op1=='r8w':
+                _reg=op0
+                print(_reg)
                 continue
             if ins == "call":
                 _case = _t_cmp_tmp if _t_cmp_yes else _reg_case
@@ -207,7 +213,7 @@ class SimpleSwitch:
                 self.content.append({"case": _case, "arg": _t_mov_op1})
                 print(f"case:0x{_case:03x} arg@{_t_mov_op1:x}")
                 continue
-            if ins == "cmp" and op0 == "r10d":
+            if ins == "cmp" and op0 == _reg:
                 if idc.print_insn_mnem(idc.next_head(ea)) == 'jnz':
                     _reg_case += int(op1.strip('h'), 16)
                     _t_cmp_yes = False
@@ -215,7 +221,7 @@ class SimpleSwitch:
                     _t_cmp_tmp = int(op1.strip('h'), 16)
                     _t_cmp_yes = True
                 continue
-            if ins == "sub" and op0 == "r10d":
+            if ins == "sub" and op0 == _reg:
                 _reg_case += int(op1.strip('h'), 16)
                 _t_cmp_yes = False
                 continue

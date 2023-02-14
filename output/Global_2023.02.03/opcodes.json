@@ -156,6 +156,18 @@
                 "opcode":267
             },
             {
+                "name":"BattleTalk2",
+                "opcode":168
+            },
+            {
+                "name":"BattleTalk4",
+                "opcode":866
+            },
+            {
+                "name":"BattleTalk8",
+                "opcode":412
+            },
+            {
                 "name":"BalloonTalk2",
                 "opcode":365
             },
@@ -242,6 +254,22 @@
             {
                 "name":"BossStatusEffectList",
                 "opcode":484
+            },
+            {
+                "name":"EffectResult",
+                "opcode":532
+            },
+            {
+                "name":"EffectResult4",
+                "opcode":360
+            },
+            {
+                "name":"EffectResult8",
+                "opcode":103
+            },
+            {
+                "name":"EffectResult16",
+                "opcode":693
             },
             {
                 "name":"EffectResultBasic",
