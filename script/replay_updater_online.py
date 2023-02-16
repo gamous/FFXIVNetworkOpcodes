@@ -97,8 +97,13 @@ count=[]
 def parse_recordpacket(offset=0):
     if(offset):fd.seek(offset)
     opcode,dataLength,ms,objectID=unpack_filedatas('H H I I')
+
+    #const opcode for rsv(0xf001),rsf(0xf002)
+    if(opcode<0xf000):
+        newopcode=newop(opcode)
+    else:
+        newopcode=opcode
     
-    newopcode=newop(opcode)
     print(f"{opcode:x}=>{newopcode:x}|{dataLength:x}|{ms:x}|{objectID:x}")
 
     fw.write(pack('H H I I', newopcode,dataLength,ms,objectID))

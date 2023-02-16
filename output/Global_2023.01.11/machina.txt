@@ -8,7 +8,7 @@ Ability16|38A
 Ability24|C8
 Ability32|32B
 ActorCast|29C
-EffectResult|22C
+EffectResult|{EffectResult}
 EffectResultBasic|384
 ActorControl|179
 ActorControlSelf|26F
@@ -22,4 +22,4 @@ ActorSetPos|18C
 ActorGauge|171
 PresetWaymark|204
 Waymark|38E
-SystemLogMessage|9A
+SystemLogMessage|{SystemLogMessage}

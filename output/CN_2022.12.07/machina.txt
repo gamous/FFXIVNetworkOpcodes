@@ -9,7 +9,7 @@ Ability24|3B6
 Ability32|37E
 ActorCast|186
 EffectResult|200
-EffectResultBasic|1DA
+EffectResultBasic|{EffectResultBasic}
 ActorControl|365
 ActorControlSelf|245
 ActorControlTarget|15B
