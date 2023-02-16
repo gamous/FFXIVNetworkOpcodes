@@ -156,24 +156,28 @@
                 "opcode":466
             },
             {
-                "name":"SystemLogMessage",
-                "opcode":154
+                "name":"BattleTalk2",
+                "opcode":425
             },
             {
-                "name":"SystemLogMessage32",
-                "opcode":367
+                "name":"BattleTalk4",
+                "opcode":670
             },
             {
-                "name":"SystemLogMessage48",
-                "opcode":395
+                "name":"BattleTalk8",
+                "opcode":178
             },
             {
-                "name":"SystemLogMessage80",
-                "opcode":237
+                "name":"BalloonTalk2",
+                "opcode":574
             },
             {
-                "name":"SystemLogMessage144",
-                "opcode":633
+                "name":"BalloonTalk4",
+                "opcode":941
+            },
+            {
+                "name":"BalloonTalk8",
+                "opcode":147
             },
             {
                 "name":"NpcYell",
@@ -230,22 +234,6 @@
             {
                 "name":"BossStatusEffectList",
                 "opcode":494
-            },
-            {
-                "name":"EffectResult",
-                "opcode":556
-            },
-            {
-                "name":"EffectResult4",
-                "opcode":438
-            },
-            {
-                "name":"EffectResult8",
-                "opcode":366
-            },
-            {
-                "name":"EffectResult16",
-                "opcode":592
             },
             {
                 "name":"EffectResultBasic",
