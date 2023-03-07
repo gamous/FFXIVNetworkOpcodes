@@ -7,7 +7,10 @@
       },
       "EffectResult": {
         "CN": "75 47 48 C7 44 24 ? ? ? ? ?",
-        "Global": "48 ? ? ? 41 ? ? ? 83 ? ? 74 ? 3d"
+        "Global": {
+          "Signature":"E8 ? ? ? ? 45 33 C0 48 8D 53 10 8B CE 48 8B 7C 24 ? 48 8B 5C 24 ? 48 83 C4 50 5E E9 ? ? ? ? 44 0F B7 C2 ",
+          "Type": "Call"
+        }
       },
       "EffectResultBasic": "48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ?",
       "EventPlay": {
