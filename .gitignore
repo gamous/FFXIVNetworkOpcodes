@@ -2,3 +2,4 @@
 **/errors.json
 *.dat
 *.dmp
+**/__pycache__/
