@@ -1,4 +1,4 @@
-from cstruct import c_struct
+from .cstruct import c_struct
 from ctypes import *
 
 @c_struct
@@ -50,6 +50,6 @@ class ActorCast:
 
 
 
-a=ActorCast()
-a._pos=c_uint16*3
-print(a)
+#a=ActorCast()
+#a._pos=c_uint16*3
+#print(a)
