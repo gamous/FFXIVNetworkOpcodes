@@ -51,10 +51,12 @@ def c_struct(cls):
         def __iter__(self):
             for i in self._fields_:
                 yield (i[0],getattr(self,i[0]) )
+        def size(self):
+            return sizeof(self.__class__)
         def pack(self):
-            return string_at(addressof(self),sizeof(self.__class__))
+            return string_at(addressof(self),self.size())
         def unpack(self,raw):
-            memmove(addressof(self),raw,sizeof(self.__class__))
+            memmove(addressof(self),raw,self.size())
             return dict(self)
     for item in set(dir(cls)) - set(dir(new_cls)):
         setattr(new_cls,item,getattr(cls,item))

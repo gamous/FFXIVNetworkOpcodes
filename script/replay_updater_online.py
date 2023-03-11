@@ -1,4 +1,4 @@
-import httpx
+import requests
 
 from struct import *
 import sys,os,json
@@ -17,11 +17,16 @@ if len(sys.argv)>4:
 
 repo_url="https://raw.githubusercontent.com/gamous/FFXIVNetworkOpcodes/main/output/"
 retry_times=5
+
+RsvOpcde = 0xF001
+RsfOpcde = 0xF002
+DeltaOpCode = 0xF003
+
 def safe_get(url):
     for i in range(retry_times):
         try:
-            return httpx.get(url)
-        except httpx.ConnectTimeout:
+            return requests.get(url)
+        except requests.ConnectTimeout:
             print('Retry Download')
     exit(0)
 
@@ -35,6 +40,8 @@ if target=='':
     target=input(f"TargetVer(default{default}):").strip()
     if target=='':
         target=default
+elif target=='latest':
+    target=list(meta)[0]
 if(target not in meta):
     print('Target Not Found')
     exit(0)
@@ -108,7 +115,8 @@ def parse_recordpacket(offset=0):
 
     fw.write(pack('H H I I', newopcode,dataLength,ms,objectID))
     data=fd.read(dataLength)
-
+    #print(type(opcode))
+    
     #Privacy Protect
     if(opcode2name[f"{opcode:03X}"]=='UpdateParty'):
         for i in range(8):
@@ -117,7 +125,20 @@ def parse_recordpacket(offset=0):
         data=data[0:0x230]+b'Player'.ljust(0x20,b'\0')+data[0x230+0x20:]
     elif(opcode2name[f"{opcode:03X}"]=='CountdownInitiate'):
         data=data[0:0xb]+b'Player'.ljust(0x20,b'\0')+data[0xb+0x20:]
-
+    
+    #Delta Research
+    elif(opcode2name[f"{opcode:03X}"]=='InitZone'):
+        print(data)
+        delta_key=data[0x15]
+        delta_type=data[0x16]
+        delta_time=unpack('I',data[0x18:0x1c])[0]
+        data=data[0:0x15]+b'\0'+data[0x16:]
+        print(f'Delta Parmas:  key={delta_key:x} type={delta_type:x} time={delta_time:x}')
+        input()
+    elif(opcode==0xF003):
+        delta=unpack('I',data)[0]
+        print(f'UpdateDelta:{delta:x}')
+        input()
     if(search!=None and search in data):
         print(" ".join([f"{i:02x}"for i in data]))
         count.append(opcode)
