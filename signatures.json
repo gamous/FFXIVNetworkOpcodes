@@ -2,15 +2,12 @@
   "ServerZoneIpcType": {
     "__init__": {
       "ProcessZonePacketDown": {
-        "Global": "48 89 5C 24 ?? 56 48 83 EC 50 8B F2",
+        "Global": "40 53 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 70 8B F2",
         "CN": "40 55 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8B ?? 49 8B ??"
       },
       "EffectResult": {
-        "CN": "75 47 48 C7 44 24 ? ? ? ? ?",
-        "Global": {
-          "Signature":"E8 ? ? ? ? 45 33 C0 48 8D 53 10 8B CE 48 8B 7C 24 ? 48 8B 5C 24 ? 48 83 C4 50 5E E9 ? ? ? ? 44 0F B7 C2 ",
-          "Type": "Call"
-        }
+        "Global": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 FA ?",
+        "CN": "75 47 48 C7 44 24 ? ? ? ? ?"
       },
       "EffectResultBasic": "48 ? ? ? 45 ? ? ? 41 ? ? ? ? ? ? 77 ? 74 ? 41 ? ? ? ? ? ? 74",
       "EventPlay": {
@@ -18,7 +15,7 @@
         "Type": "Call"
       },
       "EventLogMessage": {
-        "Global": "48 ? ? ? 45 ? ? ? 41 ? ? ? 74 ? 41",
+        "Global": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?",
         "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 81 EA ? ? ? ? 74 ? 41 81 EA ? ? ? ?"
       },
       "BattleTalk": {
@@ -35,7 +32,7 @@
     "NpcSpawn": "E8 ? ? ? ? 48 8B 5C 24 30 48 83 C4 ? 5F C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC ? 48 8B DA 8B F9",
     "NpcSpawn2": "E8 ? ? ? ? 48 8B 5C 24 30 48 83 C4 ? 5F C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B DA",
     "ActorFreeSpawn": "40 53 48 83 EC 20 48 8B DA 48 8D 0D ? ? ? ? 0F B6 12 E8 ? ? ? ? 0F B6 13",
-    "ObjectSpawn": "48 89 5C 24 18 57 48 83 EC ? F6 42 02 ?",
+    "ObjectSpawn": "48 89 5c 24 ? 57 48 ? ? ? f6 42 ? ? 48 ? ? 0f",
     "ObjectDespawn": "40 53 48 83 EC 20 48 8B DA 48 8D 0D ? ? ? ? 0F B6 12 E8 ? ? ? ? 48 85 C0",
 
     "CreateTreasure": "48 89 5C 24 ? 57 48 83 EC 40 0F B6 42 0E",
@@ -159,18 +156,21 @@
     },
 
     "NpcYell":"48 83 EC 58 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 ? 0F 10 41 10",
-    "ActorSetPos": "48 8B C4 48 89 58 10 ? ? ? ? ? 81 EC A0 ? ? ? 0F 29 70 D8 48 8B F1",
+    "ActorSetPos": {
+      "Global": "48 ? ? 48 89 58 ? 48 89 70 ? 57 41 ? 41 ? 48 ? ? ? ? ? ? 0f 29 70",
+      "CN": "48 8B C4 48 89 58 10 ? ? ? ? ? 81 EC A0 ? ? ? 0F 29 70 D8 48 8B F1"
+    },
     "PrepareZoning": "44 0F B6 C2 48 8B D1 48 8D 0D ? ? ? ?",
     "_record_unk58_":"E9 ? ? ? ? 4C 8D 43 10 8B D6 48 8D 0D ? ? ? ? E8 ? ? ? ? F6 05 ? ? ? ? ? 0F 85 ? ? ? ? 48 8D 53 10 48 8D 0D ? ? ? ?",
-    "StatusEffectList3": "48 89 5C 24 08 57 48 83 EC ? 48 8B 1D ? ? ? ? 48 8B FA 48 85 DB 74 ? 48 8B 03",
     "WeatherChange": "48 8D 0D ? ? ? ? F3 0F 10 52 ? ",
     "UpdateParty":"48 89 5C 24 ? 57 48 83 EC 30 49 8B F8 48 C7 44 24 ? ? ? ? ? 4C 8B CF 41 B8 ? ? ? ? 48 8B D9 E8 ? ? ? ? 84 C0 74 60",
     "UpdateAlliance":  "41 0F 45 FD E8 ? ? ? ? FF C5",
     "UpdateSpAlliance": "41 0F 45 DD E8 ? ? ? ? FF C5 ",
     "UpdateHpMpTp": "48 89 5C 24 ? 48 89 6C 24 ? 56 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 E8 48 8B DA 8B F1 0F 84 ? ? ? ? 48 89 7C 24 ?",
     "StatusEffectList": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ?",
-    "EurekaStatusEffectList":"E8 ? ? ? ? 80 3B 00 48 8B F8 74 6D",
     "StatusEffectList2": "48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 E8 48 8B DA 8B F1 0F 84 ? ? ? ? 48 83 C2 ? E8 ? ? ? ?",
+    "StatusEffectList3": "48 89 5C 24 08 57 48 83 EC ? 48 8B 1D ? ? ? ? 48 8B FA 48 85 DB 74 ? 48 8B 03",
+    "EurekaStatusEffectList": "E8 ? ? ? ? 80 3B 00 48 8B F8 74 6D",
     "BossStatusEffectList": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 83 3D ? ? ? ? ? 41 0F B6 F0",
     "EffectResult": {
       "Function": "EffectResult",
@@ -214,7 +214,7 @@
     },
 
     "PartyPos":"45 33 D2 4C 8B CA 4C 8B D9",
-    "AlliancePos":  "66 0F 6E C0 41 0F B6 40 ? F6 D8 F3 0F 59 D3 0F B6 82 ? ? ? ? 1A C9 F3 0F 59 CB 24 FB ",
+    "AlliancePos": "66 0F 6E C0 41 0F B6 40 ? F6 D8 F3 0F 59 D3 0F B6 82 ? ? ? ? 1A C9 F3 0F 59 CB 24 FB",
     "SpAlliancePos":"66 0F 6E C0 41 0F B6 40 ? F6 D8 F3 0F 59 D3 0F B6 82 ? ? ? ? F3 0F 59 CB ",
 
     "PlaceMarker":"48 89 5C 24 ? 4C 2B C1 4C 8D 51 10",
@@ -255,8 +255,6 @@
     "CountdownCancel":"48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 34",
     "InitZone": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 49 8B F8 8B F2 48 8B D9 E8 ? ? ? ? F6 83 1A 07 00 00 ?",
 
-
-    
     "Examine": "48 89 5C 24 18 56 41 56 41 57 48 83 EC ? 8B DA",
     "ExamineSearchInfo": "40 53 48 83 EC 20 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 37",
     "InventoryActionAck": "48 83 EC ? 48 8B 05 ? ? ? ? 41 0F B6 50 04",
@@ -270,15 +268,14 @@
     "PlayerStats": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 33 FF 48 8B F2",
     "Playtime": "E9 ? ? ? ? 48 8B 0D ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 10 45 33 C0",
 
-
     "UpdateClassInfo": "48 89 5c 24 ? 48 89 74 24 ? 57 48 ? ? ? 0f ? ? 48 ? ? ? ? ? ? 48 ? ? 33",
     "UpdateInventorySlot": "48 89 5C 24 08 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 58 0F B7 5A 08",
     "UpdateSearchInfo": "48 89 5C 24 18 57 48 83 EC ? 48 8B 0D ? ? ? ?",
     "WardLandInfo": "E8 ? ? ? ? 41 83 CE ? 48 8D 55 C0",
     "CEDirector": "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 0F B6 42 08",
     "Logout": {
-      "Global": "E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 48 8B 7C 24 60 48 8B 5C 24 70 48 83 C4 ? 5E E9 ? ? ? ? 48 8B 0D ? ? ? ?",
-      "CN": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8B 0D ? ? ? ?"
+      "Global": "E8 ? ? ? ? E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 E8 ? ? ? ? E9 ? ? ? ? 48 8B 0D ? ? ? ?",
+      "CN": "B9 ? ? ? ? E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8B 0D ? ? ? ? E8 ? ? ? ? 48 85 C0"
     },
     
     "FreeCompanyInfo": "40 55 56 41 56 48 83 EC ? C6 81 C3 06 00 00 ?",
@@ -292,17 +289,20 @@
     "SubmarineExplorationResult": "0F 85 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 81 C1 ? ? ? ?",
     
     "CFPreferredRole": {
-      "Global": "E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 48 8B 7C 24 60 48 8B 5C 24 70 48 83 C4 ? 5E E9 ? ? ? ? 48 8D 4B 10 48 8B 7C 24 60",
+      "Global": "E8 ? ? ? ? E9 ? ? ? ? B9 ? ? ? ? 45 33 C0 48 8B D3 E8 ? ? ? ? E9 ? ? ? ? 48 8D 4B 10 E8 ? ? ? ? E9 ? ? ? ?",
       "CN": "E9 ? ? ? ? B9 ? ? ? ? E9 ? ? ? ? 48 8D 4E 10 E8 ? ? ? ? E9 ? ? ? ?"
     },
     "CompanyAirshipStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 40 48 85 C9 74 ? BA ? ? ? ?",
     "CompanySubmersibleStatus": "48 89 5C 24 08 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 49 48 48 85 C9 74 ?",
-    "ContentFinderNotifyPop": "48 89 5C 24 20 57 48 83 EC ? 48 8B D9 48 8D 0D ? ? ? ?",
+    "ContentFinderNotifyPop": "48 89 5c 24 ? 57 48 ? ? ? 80 79 ? ? 8b ? 48 ? ? 0f 84",
     
     "FateInfo": "48 8B 81 90 00 00 00 4C 8B 91 98 00 00 00 49 3B C2 74 ? 48 8B 08 66 39 51 18",
     "UpdateRecastTimes": "48 89 5C 24 08 57 48 83 EC ? 48 8B DA 33 FF 90",
     "SocialList": "48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2",
-    "IslandWorkshopSupplyDemand": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ? 80 B9 68 02 00 00 ?",
+    "IslandWorkshopSupplyDemand": {
+      "Global": "48 89 5c 24 ? 48 89 6c 24 ? 48 89 74 24 ? 57 48 ? ? ? 80 b9 ? ? ? ? ? 48 ? ? 74 ? 0f",
+      "CN": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ? 80 B9 68 02 00 00 ?"
+    },
     "RSV": "E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC 48 8B 11",
     "RSF":"48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 40 48 83 B9 20 02 00 00 00"
   },
