@@ -37,9 +37,11 @@ for s in slist_s:
         Region_s,version_s=s.split('\\')[4].split('_')
         break
 if Region_s == 'shanda':
-    Region='CN'
+    Region = 'CN'
 elif Region_s == 'ver':
-    Region='Global'
+    Region = 'Global'
+elif Region_s == 'actoz':
+    Region = 'KR'
 else:
     Region='Unknown'
 print(f"{Region} {version_s} {VersionID:08X} {BuildID}")
@@ -359,7 +361,9 @@ class ServerZoneIpcType:
 
 #todo 递归层数检查
     def find_in_table_process(self, ea, name):
-        print(name)
+        print(f'{name} 0x{ea:03x}')
+        if idaapi.segtype(ea) != idaapi.SEG_CODE:
+            return False
         func = idaapi.get_func(ea)
         if func:
             ea = func.start_ea
@@ -446,8 +450,10 @@ class ConfigReader:
                 _sig = sig["Signature"]
             if Region == "Global" and "Global" in sig:
                 return self.sig2addr(sig["Global"], name)
-            if Region == "CN" and "CN" in sig:
+            elif Region == "CN" and "CN" in sig:
                 return self.sig2addr(sig["CN"], name)
+            elif Region == "KR" and "KR" in sig:
+                return self.sig2addr(sig["KR"], name)
             if not _sig:
                 return sig
 
@@ -510,7 +516,13 @@ outpath = lambda name: os.path.join(
     name,
 )
 opcodes_internal_path = outpath("opcodes_internal.json")
-opcodes_csharp_path = outpath("Ipcs_cn.cs" if Region == "CN" else "Ipcs.cs")
+if Region == "CN":
+    ipcs_filename = "Ipcs_cn.cs"
+elif Region == "KR":
+    ipcs_filename = "Ipcs_kr.cs"
+else:
+    ipcs_filename = "ipcs.cs"
+opcodes_csharp_path = outpath(ipcs_filename)
 errors_path = outpath("errors.json")
 debugs_path = outpath("debug.json")
 opcodes_path = outpath("opcodes.json")
