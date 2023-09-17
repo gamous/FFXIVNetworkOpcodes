@@ -118,23 +118,24 @@ def parse_recordpacket(offset=0):
     #print(type(opcode))
     
     #Privacy Protect
-    if(opcode2name[f"{opcode:03X}"]=='UpdateParty'):
-        for i in range(8):
-            data=data[0:0x1b8*i]+b'Player'.ljust(0x28,b'\0')+data[0x1b8*i+0x28:]
-    elif(opcode2name[f"{opcode:03X}"]=='PlayerSpawn'):
-        data=data[0:0x230]+b'Player'.ljust(0x20,b'\0')+data[0x230+0x20:]
-    elif(opcode2name[f"{opcode:03X}"]=='CountdownInitiate'):
-        data=data[0:0xb]+b'Player'.ljust(0x20,b'\0')+data[0xb+0x20:]
-    
-    #Delta Research
-    elif(opcode2name[f"{opcode:03X}"]=='InitZone'):
-        print(data)
-        delta_key=data[0x15]
-        delta_type=data[0x16]
-        delta_time=unpack('I',data[0x18:0x1c])[0]
-        data=data[0:0x15]+b'\0'+data[0x16:]
-        print(f'Delta Parmas:  key={delta_key:x} type={delta_type:x} time={delta_time:x}')
-        input()
+    if(opcode<0xf000):
+        if(opcode2name[f"{opcode:03X}"]=='UpdateParty'):
+            for i in range(8):
+                data=data[0:0x1b8*i]+b'Player'.ljust(0x28,b'\0')+data[0x1b8*i+0x28:]
+        elif(opcode2name[f"{opcode:03X}"]=='PlayerSpawn'):
+            data=data[0:0x230]+b'Player'.ljust(0x20,b'\0')+data[0x230+0x20:]
+        elif(opcode2name[f"{opcode:03X}"]=='CountdownInitiate'):
+            data=data[0:0xb]+b'Player'.ljust(0x20,b'\0')+data[0xb+0x20:]
+        
+        #Delta Research
+        elif(opcode2name[f"{opcode:03X}"]=='InitZone'):
+            print(data)
+            delta_key=data[0x15]
+            delta_type=data[0x16]
+            delta_time=unpack('I',data[0x18:0x1c])[0]
+            data=data[0:0x15]+b'\0'+data[0x16:]
+            print(f'Delta Parmas:  key={delta_key:x} type={delta_type:x} time={delta_time:x}')
+            input()
     elif(opcode==0xF003):
         delta=unpack('I',data)[0]
         print(f'UpdateDelta:{delta:x}')

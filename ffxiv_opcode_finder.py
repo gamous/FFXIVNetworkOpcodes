@@ -3,6 +3,7 @@ import idc
 import idautils
 import ida_bytes
 import ida_nalt
+import ida_xref
 import ida_search
 import ida_ua
 import os
@@ -234,6 +235,57 @@ class SimpleSwitch:
                 return case["case"]
         return None
 
+def map_switch_jumps(_si: int):
+    si = ida_nalt.switch_info_t()
+    res = {}
+    if ida_nalt.get_switch_info(si, _si):
+        results = ida_xref.calc_switch_cases(_si, si)
+        for idx in range(len(results.cases)):
+            s = res.setdefault(results.targets[idx], set())
+            for _idx in range(len(cases := results.cases[idx])):
+                s.add(cases[_idx])
+    return res
+
+class SwitchTableX:
+    def __init__(self, ea) -> None:
+        self.content = []
+        self.switch_func = idaapi.get_func(ea)
+        self.switch_address = find_next_insn(ea, "jmp")
+        print(f"switch table at {self.switch_address:x} <- {ea:x}")
+        switch_info = ida_nalt.get_switch_info(self.switch_address)
+        print(switch_info)
+        print(switch_info.ncases)
+        print(switch_info.jumps)
+        print(switch_info.lowcase)
+        bias = switch_info.jumps
+        
+        element_num = switch_info.get_jtable_size()
+        element_size = switch_info.get_jtable_element_size()
+
+        mapcase =  map_switch_jumps(self.switch_address)
+        for i in range(0, element_num):
+            table_entry = bias + i * element_size
+            startea = switch_info.elbase + idc.get_wide_dword(table_entry)
+            endea = min(
+                find_next_insn(startea, "jmp", 1000),
+                find_next_insn(startea, "retn", 1000),
+            )
+            caseid=list(mapcase.get(startea, set()))[0]
+            movea = find_next_insn(startea, "mov", endea-startea)
+            op1 = idc.print_operand(movea , 1)
+            print(op1)
+            try:
+                _t_mov_op1 = int(op1.strip('h'), 16)
+            except:
+                _t_mov_op1 = 0xffff
+            print(f"case:{caseid:x} arg:{_t_mov_op1:x}")
+            self.content.append({"case": caseid, "arg": _t_mov_op1})
+
+    def index(self, arg):
+        for case in self.content:
+            if case["arg"] == arg:
+                return case["case"]
+        return None
 
 class CallTable:
     def __init__(self, func_address) -> None:
@@ -313,7 +365,10 @@ class ServerZoneIpcType:
         self.funcs = {}
         for func in self.config["__init__"]:
             if self.config["__init__"][func]:
-                self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
+                try:
+                    self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
+                except:
+                    self.funcs[func] = SwitchTableX(self.config["__init__"][func])
         del self.config["__init__"]
         print("ServerZone Inited...")
         for name in self.config:
@@ -331,6 +386,7 @@ class ServerZoneIpcType:
             return False
         op = self.funcs[func].index(argv)
         if not op:
+            print(f"func {func} - {name} {argv} \n{self.funcs[func].content}")
             errors["ArgvNotFound"].append(name)
             return False
         self.content[name] = op
