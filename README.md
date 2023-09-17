@@ -22,6 +22,7 @@ Some mapping of synonyms provided in [NAME.md](https://github.com/gamous/FFXIVNe
 
 #### Todo
 
+- **【WIP】Refactoring with new switch calc and new pattern matcher**
 - More generators
 - Support more complex but not jmptable switch
 
