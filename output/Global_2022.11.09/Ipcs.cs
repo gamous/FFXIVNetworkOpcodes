@@ -88,7 +88,7 @@ namespace FFXIVOpcodes.Global
         SocialList = 0x0176,
     };
     
-    public enum ClientLobbyIpcType : ushort
+    public enum ClientZoneIpcType : ushort
     {
         ActionRequest = 0x0093,
         ActionRequestGroundTargeted = 0x00EA,
