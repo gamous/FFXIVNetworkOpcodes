@@ -143,7 +143,7 @@ namespace FFXIVOpcodes.Global
         RSF = 0x019B,
     };
     
-    public enum ClientLobbyIpcType : ushort
+    public enum ClientZoneIpcType : ushort
     {
         ActionRequest = 0x00A7,
         ActionRequestGroundTargeted = 0x0065,

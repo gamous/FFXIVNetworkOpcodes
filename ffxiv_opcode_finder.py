@@ -572,12 +572,12 @@ outpath = lambda name: os.path.join(
     name,
 )
 opcodes_internal_path = outpath("opcodes_internal.json")
-if Region == "CN":
-    ipcs_filename = "Ipcs_cn.cs"
-elif Region == "KR":
-    ipcs_filename = "Ipcs_kr.cs"
+
+if Region != "Global":
+    ipcs_filename = f"Ipcs_{Region.lower()}.cs"
 else:
-    ipcs_filename = "ipcs.cs"
+    ipcs_filename = "Ipcs.cs"
+
 opcodes_csharp_path = outpath(ipcs_filename)
 errors_path = outpath("errors.json")
 debugs_path = outpath("debug.json")
@@ -634,7 +634,7 @@ ipcs_line = [
 ipcs_line += get_enum_textblock("ServerLobbyIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ClientLobbyIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ServerZoneIpcType", serverzone.content, 'ushort', 4)
-ipcs_line += get_enum_textblock("ClientLobbyIpcType", clientzone.content, 'ushort', 4)
+ipcs_line += get_enum_textblock("ClientZoneIpcType", clientzone.content, 'ushort', 4)
 ipcs_line += get_enum_textblock("ServerChatIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ClientChatIpcType", {}, 'ushort', 4)
 ipcs_line += ["}"]
