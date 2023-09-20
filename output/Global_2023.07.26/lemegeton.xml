@@ -13,8 +13,8 @@
 				<Opcode Name="ActorControl" Id="212" />
 				<Opcode Name="ActorControlSelf" Id="961" />
 				<Opcode Name="ActorControlTarget" Id="239" />
-				<Opcode Name="MapEffect" Id="0" />
-				<Opcode Name="EventPlay" Id="0" />
-				<Opcode Name="EventPlay64" Id="0" />
+				<Opcode Name="MapEffect" Id="311" />
+				<Opcode Name="EventPlay" Id="731" />
+				<Opcode Name="EventPlay64" Id="639" />
 			</Opcodes>
 		</Region>
