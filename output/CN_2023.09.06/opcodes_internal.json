@@ -135,7 +135,7 @@
             "ActionRequest":317,
             "ActionRequestGroundTargeted":482,
             "ChatHandler":805,
-            "ClientTrigger ":925,
+            "ClientTrigger":925,
             "InventoryModifyHandler":932,
             "MarketBoardPurchaseHandler":728,
             "SetSearchInfoHandler":120,
