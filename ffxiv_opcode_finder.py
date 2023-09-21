@@ -572,16 +572,18 @@ outpath = lambda name: os.path.join(
     name,
 )
 opcodes_internal_path = outpath("opcodes_internal.json")
-if Region == "CN":
-    ipcs_filename = "Ipcs_cn.cs"
-elif Region == "KR":
-    ipcs_filename = "Ipcs_kr.cs"
+
+if Region != "Global":
+    ipcs_filename = f"Ipcs_{Region.lower()}.cs"
 else:
-    ipcs_filename = "ipcs.cs"
+    ipcs_filename = "Ipcs.cs"
+
 opcodes_csharp_path = outpath(ipcs_filename)
 errors_path = outpath("errors.json")
 debugs_path = outpath("debug.json")
 opcodes_path = outpath("opcodes.json")
+lemegeton_path = outpath("lemegeton.xml")
+
 with open(opcodes_path, "w+") as f:
     json.dump(opcodes, f, sort_keys=False, indent=4, separators=(",", ":"))
     print(f"Result saved on {opcodes_path}")
@@ -634,7 +636,7 @@ ipcs_line = [
 ipcs_line += get_enum_textblock("ServerLobbyIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ClientLobbyIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ServerZoneIpcType", serverzone.content, 'ushort', 4)
-ipcs_line += get_enum_textblock("ClientLobbyIpcType", clientzone.content, 'ushort', 4)
+ipcs_line += get_enum_textblock("ClientZoneIpcType", clientzone.content, 'ushort', 4)
 ipcs_line += get_enum_textblock("ServerChatIpcType", {}, 'ushort', 4)
 ipcs_line += get_enum_textblock("ClientChatIpcType", {}, 'ushort', 4)
 ipcs_line += ["}"]
@@ -642,3 +644,30 @@ ipcs_line = list(map(lambda l: l + "\n", ipcs_line))
 with open(opcodes_csharp_path, "w+") as f:
     f.writelines(ipcs_line)
 print(f'Gen ipcs on {opcodes_csharp_path,}')
+
+
+Region_Name="EN/DE/FR/JP" if Region=="Global" else Region
+
+lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.0000">
+			<Opcodes>
+				<Opcode Name="StatusEffectList" Id="{serverzone.content["StatusEffectList"]}" />
+				<Opcode Name="StatusEffectList2" Id="{serverzone.content["StatusEffectList2"]}" />
+				<Opcode Name="StatusEffectList3" Id="{serverzone.content["StatusEffectList3"]}" />
+				<Opcode Name="Ability1" Id="{serverzone.content["Effect"]}" />
+				<Opcode Name="Ability8" Id="{serverzone.content["AoeEffect8"]}" />
+				<Opcode Name="Ability16" Id="{serverzone.content["AoeEffect16"]}" />
+				<Opcode Name="Ability24" Id="{serverzone.content["AoeEffect24"]}" />
+				<Opcode Name="Ability32" Id="{serverzone.content["AoeEffect32"]}" />
+				<Opcode Name="ActorCast" Id="{serverzone.content["ActorCast"]}" />
+				<Opcode Name="EffectResult" Id="{serverzone.content["EffectResult"]}" />
+				<Opcode Name="ActorControl" Id="{serverzone.content["ActorControl"]}" />
+				<Opcode Name="ActorControlSelf" Id="{serverzone.content["ActorControlSelf"]}" />
+				<Opcode Name="ActorControlTarget" Id="{serverzone.content["ActorControlTarget"]}" />
+				<Opcode Name="MapEffect" Id="{serverzone.content["EnvironmentControl"]}" />
+				<Opcode Name="EventPlay" Id="{serverzone.content["EventPlay"]}" />
+				<Opcode Name="EventPlay64" Id="{serverzone.content["EventPlay64"]}" />
+			</Opcodes>
+		</Region>"""
+with open(lemegeton_path, "w+") as f:
+    f.write(lemegeton_opcodes)
+print(f'Gen lemegeton_bludprint.xml on {lemegeton_path,}')

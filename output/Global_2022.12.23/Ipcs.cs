@@ -97,7 +97,7 @@ namespace FFXIVOpcodes.Global
         IslandWorkshopSupplyDemand = 0x03E7,
     };
     
-    public enum ClientLobbyIpcType : ushort
+    public enum ClientZoneIpcType : ushort
     {
         ActionRequest = 0x00E1,
         ActionRequestGroundTargeted = 0x0143,
