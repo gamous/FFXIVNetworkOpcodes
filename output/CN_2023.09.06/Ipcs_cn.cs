@@ -147,7 +147,7 @@ namespace FFXIVOpcodes.CN
         ActionRequest = 0x013D,
         ActionRequestGroundTargeted = 0x01E2,
         ChatHandler = 0x0325,
-        ClientTrigger  = 0x039D,
+        ClientTrigger = 0x039D,
         InventoryModifyHandler = 0x03A4,
         MarketBoardPurchaseHandler = 0x02D8,
         SetSearchInfoHandler = 0x0078,
