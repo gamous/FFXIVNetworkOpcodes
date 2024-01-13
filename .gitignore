@@ -1,0 +1,5 @@
+**/debug.json
+**/errors.json
+*.dat
+*.dmp
+**/__pycache__/
