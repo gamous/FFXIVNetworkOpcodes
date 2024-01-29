@@ -1,5 +1,7 @@
 # FFXIVNetworkOpcodes
 
+# Moved to [https://github.com/moewcorp/FFXIVNetworkOpcodes](https://github.com/moewcorp/FFXIVNetworkOpcodes)
+
 ## ffxiv_opcode_finder.py
 
 **Python3** and **IDA7** are required.
