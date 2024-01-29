@@ -312,6 +312,7 @@
     "MarketBoardPurchaseHandler": "0F B7 83 ? ? ? ? 48 89 54 24 ? ",
     "SetSearchInfoHandler": "0F 11 41 80 0F 10 43 32 ",
     "UpdatePositionHandler": "F7 D9 48 C7 44 24 ? ? ? ? ?",
-    "UpdatePositionInstance": "44 8B CE 0F 11 44 24 ?"
+    "UpdatePositionInstance": "44 8B CE 0F 11 44 24 ?",
+    "Heartbeat": "C7 45 ? ? ? ? ? 0F ? ? 48 C7 45 ? ? ? ? ? 48"
   }
 }

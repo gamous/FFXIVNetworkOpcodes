@@ -140,7 +140,8 @@
             "MarketBoardPurchaseHandler":850,
             "SetSearchInfoHandler":456,
             "UpdatePositionHandler":581,
-            "UpdatePositionInstance":705
+            "UpdatePositionInstance":705,
+            "Heartbeat":942
         }
     }
 }
