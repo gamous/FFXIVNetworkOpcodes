@@ -552,6 +552,14 @@
             {
                 "name":"Heartbeat",
                 "opcode":118
+            },
+            {
+                "name":"WoldTravel",
+                "opcode":515
+            },
+            {
+                "name":"ClientCountdownInitiate",
+                "opcode":789
             }
         ]
     }

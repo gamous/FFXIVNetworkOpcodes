@@ -154,6 +154,8 @@ namespace FFXIVOpcodes.CN
         UpdatePositionHandler = 0x03CB,
         UpdatePositionInstance = 0x0184,
         Heartbeat = 0x0076,
+        WoldTravel = 0x0203,
+        ClientCountdownInitiate = 0x0315,
     };
     
     public enum ServerChatIpcType : ushort

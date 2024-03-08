@@ -142,7 +142,9 @@
             "SetSearchInfoHandler":689,
             "UpdatePositionHandler":417,
             "UpdatePositionInstance":608,
-            "Heartbeat":505
+            "Heartbeat":505,
+            "WoldTravel":351,
+            "ClientCountdownInitiate":567
         }
     }
 }
