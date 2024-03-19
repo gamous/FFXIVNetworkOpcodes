@@ -30,8 +30,9 @@ slist = idautils.Strings()
 slist_s = [str(s) for s in slist]  # s.ea, s.length, s.type, str(s)
 for s in slist_s:
     if r"/*****ff14******rev" in s:
-        BuildID = s[27:37].replace('/', '.')
-        VersionID = int(s[19:26])
+        _splited = s.split("_")
+        BuildID = _splited[1].replace("/", ".")
+        VersionID = int(_splited[0][_splited[0].index("rev") + 3:])
         break
 for s in slist_s:
     if r"ffxiv_dx11.pdb" in s:
