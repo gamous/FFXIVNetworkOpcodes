@@ -2,10 +2,6 @@
 
 Subject to [FFXIVOpcodes](https://github.com/karashiiro/FFXIVOpcodes)' Naming and [ffxiv-opcode-worker/cn-opcodes.csv](https://github.com/zhyupe/ffxiv-opcode-worker/blob/master/cn-opcodes.csv)
 
-## Sapphire
-
-
-
 ## Machina
 
 mappings
@@ -52,124 +48,6 @@ PresetWaymark|{PlaceFieldMarkerPreset}
 Waymark|{PlaceFieldMarker}
 SystemLogMessage|{SystemLogMessage}
 ```
-
-
-
-## Dalamud
-
-Push to [ottercorp/DalamudAssets](https://github.com/ottercorp/DalamudAssets)
-
-mappings
-
-```json
-{
-    "HousingWardInfo": "WardLandInfo",
-    "MarketBoardItemRequestStart": "MarketBoardItemListingCount",
-    "MarketBoardHistory": "MarketBoardItemListingHistory",
-    "MarketBoardOfferings": "MarketBoardItemListing",
-    "MarketTaxRates": "ResultDialog",
-    "CfNotifyPop": "ContentFinderNotifyPop",
-    "AirshipTimers": "CompanyAirshipStatus",
-    "SubmarineTimers": "CompanySubmersibleStatus"
-}
-```
-
-server
-
-```json
-{
-  "ActorControlSelf": ActorControlSelf,
-  "HousingWardInfo": WardLandInfo,
-  "ContainerInfo": ContainerInfo,
-  "MarketBoardItemRequestStart": MarketBoardItemListingCount,
-  "MarketBoardHistory": MarketBoardItemListingHistory,
-  "MarketBoardOfferings": MarketBoardItemListing,
-  "MarketBoardPurchase": MarketBoardPurchase,
-  "InventoryActionAck": InventoryActionAck,
-  "MarketTaxRates": ResultDialog,
-  "RetainerInformation": RetainerInformation,
-  "ItemMarketBoardInfo": ItemMarketBoardInfo,
-  "CfNotifyPop": CfNotifyPop,
-  "AirshipTimers": CompanyAirshipStatus,
-  "SubmarineTimers": CompanySubmersibleStatus
-}
-```
-
-client
-
-```json
-{
-  "MarketBoardPurchaseHandler": MarketBoardPurchaseHandler,
-  "InventoryModifyHandler": InventoryModifyHandler
-}
-```
-
-
-
-## Bossmod
-
-Push to [Yarukon/ffxiv_bossmod](https://github.com/Yarukon/ffxiv_bossmod/blob/master/BossMod/Framework/Protocol.cs)
-
-mappings
-
-```json
-{
-    "ActionEffect1": "Effect",
-    "ActionEffect8": "AoeEffect8",
-    "ActionEffect16": "AoeEffect16",
-    "ActionEffect24": "AoeEffect24",
-    "ActionEffect32": "AoeEffect32",
-    "PresetWaymark": "PlaceFieldMarkerPreset",
-    "Waymark": "PlaceFieldMarker",
-    "EffectResult1": "EffectResult",
-    "EffectResultBasic1": "EffectResultBasic"
-}
-```
-
-proto
-
-```c#
-public enum Opcode
-{
-    ActionEffect1  = {Effect},
-    ActionEffect8  = {AoeEffect8},
-    ActionEffect16 = {AoeEffect16},
-    ActionEffect24 = {AoeEffect24},
-    ActionEffect32 = {AoeEffect32},
-
-
-    ActorCast      = {ActorCast},
-    ActorControl   = {ActorControl},
-    ActorControlSelf = {ActorControlSelf},
-    ActorControlTarget = {ActorControlTarget},
-    ActorGauge = {ActorGauge},
-
-    PresetWaymark = {PlaceFieldMarkerPreset},
-    Waymark = {PlaceFieldMarker},
-
-    EffectResult1  = {EffectResult  }, // Size 0x60
-    EffectResult4  = {EffectResult4 }, // Size 0x168
-    EffectResult8  = {EffectResult8 }, // Size 0x2C8
-    EffectResult16 = {EffectResult16}, // Size 0x588
-
-    EffectResultBasic1  = {EffectResultBasic  }, // Size 0x18
-    EffectResultBasic4  = {EffectResultBasic4 }, // Size 0x48
-    EffectResultBasic8  = {EffectResultBasic8 }, // Size 0x88
-    EffectResultBasic16 = {EffectResultBasic16}, // Size 0x108
-    EffectResultBasic32 = {EffectResultBasic32}, // Size 0x208
-    EffectResultBasic64 = {EffectResultBasic64}, // Size 0x408
-
-    EnvironmentControl = {EnvironmentControl}, 
-    UpdateRecastTimes = {UpdateRecastTimes}, // payload = 80 floats 'elapsed' + 80 floats 'total'
-    UpdateHate = {UpdateHate}, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
-    UpdateHater = {UpdateHater}, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
-    RSVData = {RSVData},
-
-    ActionRequest = {ActionRequest}
-    ActionRequestGroundTargeted = {ActorControlSelf},
-}
-```
-
 
 
 ## XivAlexander
