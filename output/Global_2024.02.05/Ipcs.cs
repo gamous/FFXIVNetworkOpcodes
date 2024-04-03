@@ -155,7 +155,7 @@ namespace FFXIVOpcodes.Global
         UpdatePositionHandler = 0x01A1,
         UpdatePositionInstance = 0x0260,
         Heartbeat = 0x01F9,
-        WoldTravel = 0x015F,
+        WorldTravel = 0x015F,
         ClientCountdownInitiate = 0x0237,
     };
     
