@@ -9,7 +9,7 @@ Ability24|2B7
 Ability32|6D
 ActorCast|3C5
 EffectResult|91
-EffectResultBasic|10B
+EffectResultBasic|{EffectResultBasic}
 ActorControl|30F
 ActorControlSelf|1A2
 ActorControlTarget|66
@@ -22,4 +22,4 @@ ActorSetPos|1D5
 ActorGauge|157
 PresetWaymark|2E1
 Waymark|33D
-SystemLogMessage|20D
+SystemLogMessage|{SystemLogMessage}
