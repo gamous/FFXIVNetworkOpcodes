@@ -220,8 +220,8 @@
     "ActorGauge": "4C 8B 01 4D 85 C0 74 ? 0F B6 02",
     "CharaVisualEffect": "8B FA E8 ? ? ? ? 48 85 C0 74 19",
     "Fall": "E8 ? ? ? ? 48 85 C0 74 14 48 8D 88 ? ? ? ? 48 8B D3 48 83 C4 20 5B E9 ? ? ? ? 48 83 C4 20 5B C3 CC CC CC CC CC CC CC CC CC CC 48 8B D1",
-    "UpdateHate": "41 89 0C 02 48 8D 40 08",
-    "UpdateHater": "E8 ? ? ? ? 4C 8B C0 BA ? ? ? ? 48 63 C6",
+    "UpdateHate": "0F ? ? 45 ? ? 89 05",
+    "UpdateHater": "48 89 74 24 ? 57 48 ? ? ? 0F ? ? 33 ? 89 05",
     "FirstAttack": "E8 ? ? ? ? 48 85 C0 74 14 0F B6 0B",
     "ModelEquip": {
       "Global": "48 89 5c 24 ? 55 56 57 41 ? 41 ? 41 ? 41 ? 48 ? ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 48 89 44 24 ? 44 ? ? ? ? ? ? ? 48",
