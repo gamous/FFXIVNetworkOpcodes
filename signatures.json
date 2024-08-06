@@ -22,7 +22,7 @@
       "EventLogMessage": {
         "If_this_borked_then_scan_this_pattern_and_just_go_into_the_function": "E8 ? ? ? ? 44 ? ? ? ? 4C ? ? ? 8B ? ? 8B ? ? E8",
         "Global": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ?",
-        "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA ? ? ? ?",
+        "CN": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ?",
         "KR": "48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 81 EA"
       },
       "BattleTalk": {
