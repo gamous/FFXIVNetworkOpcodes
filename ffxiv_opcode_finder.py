@@ -235,6 +235,74 @@ class SimpleSwitch:
             if case["arg"] == arg:
                 return case["case"]
         return None
+    
+class SimpleSwitch2:
+    def __init__(self, switch_address) -> None:
+        self.content = []
+        self.switch_func = idaapi.get_func(switch_address)
+        self.switch_func_item = list(idautils.FuncItems(switch_address))
+        self.process_case_block(self.switch_func.start_ea)
+        print(self.content)
+
+    def process_case_block(self, start):
+        _reg_case = None
+        _t_mov_op1 = None
+        _current_case = None
+        _jump_targets = {}
+
+        for ea in self.switch_func_item:
+            if ea < start:
+                continue
+            ins = idc.print_insn_mnem(ea)
+            op0 = idc.print_operand(ea, 0)
+            op1 = idc.print_operand(ea, 1)
+
+            if ins == "mov" and op0 == "eax" and op1.endswith('h'):
+                _reg_case = int(op1.strip('h'), 16)
+            elif ins == "cmp" and op0 == "r8w" and op1 == "ax":
+                next_ea = idc.next_head(ea)
+                next_ins = idc.print_insn_mnem(next_ea)
+                if next_ins == 'jz':
+                    target = idc.get_operand_value(next_ea, 0)
+                    _jump_targets[target] = _reg_case
+            elif ins == "jnz": # jnz直接跳转到ret了
+                _current_case = _reg_case
+
+            if _current_case is not None:
+                if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
+                    _t_mov_op1 = int(op1.strip('h'), 16)
+                elif ins == "call" and _t_mov_op1 is not None:
+                    if self.index(_t_mov_op1) is None:
+                        self.content.append({"case": _current_case, "arg": _t_mov_op1})
+                        print(f"case:0x{_current_case:03x} arg@{_t_mov_op1:x}")
+                    _current_case = None
+                    _t_mov_op1 = None
+
+        for ea in self.switch_func_item:
+            if ea in _jump_targets:
+                _current_case = _jump_targets[ea]
+                self.process_case(ea, _current_case)
+
+    def process_case(self, ea, _current_case):
+        _t_mov_op1 = None
+        while ea < idc.next_head(ea):
+            ins = idc.print_insn_mnem(ea)
+            op0 = idc.print_operand(ea, 0)
+            op1 = idc.print_operand(ea, 1)
+            if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
+                _t_mov_op1 = int(op1.strip('h'), 16)
+            elif ins == "call" and _t_mov_op1 is not None:
+                if self.index(_t_mov_op1) is None:
+                    self.content.append({"case": _current_case, "arg": _t_mov_op1})
+                    print(f"case:0x{_current_case:03x} arg@{_t_mov_op1:x}")
+                break
+            ea = idc.next_head(ea)
+
+    def index(self, arg):
+        for case in self.content:
+            if case["arg"] == arg:
+                return case["case"]
+        return None
 
 def map_switch_jumps(_si: int):
     si = ida_nalt.switch_info_t()
@@ -369,7 +437,10 @@ class ServerZoneIpcType:
                 try:
                     self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
                 except:
-                    self.funcs[func] = SwitchTableX(self.config["__init__"][func])
+                    try:
+                        self.funcs[func] = SimpleSwitch2(self.config["__init__"][func])
+                    except:
+                        self.funcs[func] = SwitchTableX(self.config["__init__"][func])
         del self.config["__init__"]
         print("ServerZone Inited...")
         for name in self.config:

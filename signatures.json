@@ -64,7 +64,7 @@
       "Signature": "48 89 5C 24 ? 48 8B 81 ? ? ? ? 4C 8B C9 48 85 C0 0F 84 ? ? ? ? 44 0F B6 5A ? 45 33 C0 66 44 3B 80 ? ? ? ? 73 61 66 0F 1F 44 00 ? 49 8B 89 ? ? ? ?",
       "Index": 1
     },
-    "EnvironmentControl": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 10 ",
+    "EnvironmentControl": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 10",
     "_record_unk25_": "",
     "_record_unk26_": "",
     "_record_unk27_": "",
