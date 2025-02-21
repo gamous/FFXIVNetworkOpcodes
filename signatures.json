@@ -34,7 +34,7 @@
         "Type": "Call"
       }
     },
-    "PlayerSpawn": "48 89 5C 24 08 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 E0 00 00 00",
+    "PlayerSpawn": "48 89 5C 24 ? 57 48 ? ? ? ? ? ? 48 ? ? 8B ? 0F ? ? ? ? ? ? 48",
     "NpcSpawn": "E8 ? ? ? ? 48 8B 9C 24 30 04 00 00 48 81 C4 ? ? ? ? 5F C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
     "NpcSpawn2": "E8 ? ? ? ? 48 8B 9C 24 30 04 00 00 48 81 C4 ? ? ? ? 5F C3 CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 10",
     "ActorFreeSpawn": "48 89 5C 24 ? 57 48 ? ? ? 0F ? ? 48 ? ? 4C ? ? ? ? ? ? 8B",

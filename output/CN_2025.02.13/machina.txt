@@ -14,7 +14,7 @@ ActorControl|2BF
 ActorControlSelf|119
 ActorControlTarget|33B
 UpdateHpMpTp|198
-PlayerSpawn|196
+PlayerSpawn|1DD
 NpcSpawn|3BB
 NpcSpawn2|29C
 ActorMove|123

@@ -13,7 +13,7 @@ namespace FFXIVOpcodes.CN
     
     public enum ServerZoneIpcType : ushort
     {
-        PlayerSpawn = 0x0196,
+        PlayerSpawn = 0x01DD,
         NpcSpawn = 0x03BB,
         NpcSpawn2 = 0x029C,
         ActorFreeSpawn = 0x0298,

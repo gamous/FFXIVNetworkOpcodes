@@ -5,7 +5,7 @@
         "ServerZoneIpcType":[
             {
                 "name":"PlayerSpawn",
-                "opcode":406
+                "opcode":477
             },
             {
                 "name":"NpcSpawn",
