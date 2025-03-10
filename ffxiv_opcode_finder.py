@@ -245,8 +245,6 @@ class SimpleSwitch2:
         print(self.content)
 
     def process_case_block(self, start):
-        _reg_case = None
-        _t_mov_op1 = None
         _current_case = None
         _jump_targets = {}
 
@@ -257,46 +255,67 @@ class SimpleSwitch2:
             op0 = idc.print_operand(ea, 0)
             op1 = idc.print_operand(ea, 1)
 
-            if ins == "mov" and op0 == "eax" and op1.endswith('h'):
-                _reg_case = int(op1.strip('h'), 16)
-            elif ins == "cmp" and op0 == "r8w" and op1 == "ax":
-                next_ea = idc.next_head(ea)
-                next_ins = idc.print_insn_mnem(next_ea)
-                if next_ins == 'jz':
-                    target = idc.get_operand_value(next_ea, 0)
-                    _jump_targets[target] = _reg_case
-            elif ins == "jnz": # jnz直接跳转到ret了
-                _current_case = _reg_case
-
-            if _current_case is not None:
+            if ins == "cmp" and op0 == "r8w":
+                if op1.endswith('h'):
+                    case_val = int(op1.strip('h'), 16)
+                elif op1 == "ax":
+                    prev_ea = idc.prev_head(ea)
+                    prev_ins = idc.print_insn_mnem(prev_ea)
+                    prev_op0 = idc.print_operand(prev_ea, 0)
+                    prev_op1 = idc.print_operand(prev_ea, 1)
+                    if prev_ins == "mov" and prev_op0 == "eax" and prev_op1.endswith('h'):
+                        case_val = int(prev_op1.strip('h'), 16)
+                    else:
+                        continue
+                else:
+                    try:
+                        case_val = int(op1, 16) if op1.isdigit() else None
+                    except:
+                        continue
+                    
+                if case_val is not None:
+                    next_ea = idc.next_head(ea)
+                    next_ins = idc.print_insn_mnem(next_ea)
+                    if next_ins in ["jz", "je"]:
+                        target = idc.get_operand_value(next_ea, 0)
+                        _jump_targets[target] = case_val
+                    elif next_ins in ["jnz", "jne"]:
+                        _current_case = case_val
+                        
+        for target_ea, case_val in _jump_targets.items():
+            self.process_target(target_ea, case_val)
+            
+        if _current_case is not None:
+            for ea in self.switch_func_item:
+                ins = idc.print_insn_mnem(ea)
+                op0 = idc.print_operand(ea, 0)
+                op1 = idc.print_operand(ea, 1)
+                
                 if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
-                    _t_mov_op1 = int(op1.strip('h'), 16)
-                elif ins == "call" and _t_mov_op1 is not None:
-                    if self.index(_t_mov_op1) is None:
-                        self.content.append({"case": _current_case, "arg": _t_mov_op1})
-                        print(f"case:0x{_current_case:03x} arg@{_t_mov_op1:x}")
-                    _current_case = None
-                    _t_mov_op1 = None
+                    arg_val = int(op1.strip('h'), 16)
+                    if self.index(arg_val) is None:
+                        self.content.append({"case": _current_case, "arg": arg_val})
+                        print(f"case:0x{_current_case:03x} arg@{arg_val:x}")
+                    break
 
+    def process_target(self, target_ea, case_val):
         for ea in self.switch_func_item:
-            if ea in _jump_targets:
-                _current_case = _jump_targets[ea]
-                self.process_case(ea, _current_case)
-
-    def process_case(self, ea, _current_case):
-        _t_mov_op1 = None
-        while ea < idc.next_head(ea):
+            if ea < target_ea:
+                continue
+                
             ins = idc.print_insn_mnem(ea)
             op0 = idc.print_operand(ea, 0)
             op1 = idc.print_operand(ea, 1)
+            
             if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
-                _t_mov_op1 = int(op1.strip('h'), 16)
-            elif ins == "call" and _t_mov_op1 is not None:
-                if self.index(_t_mov_op1) is None:
-                    self.content.append({"case": _current_case, "arg": _t_mov_op1})
-                    print(f"case:0x{_current_case:03x} arg@{_t_mov_op1:x}")
+                arg_val = int(op1.strip('h'), 16)
+                if self.index(arg_val) is None:
+                    self.content.append({"case": case_val, "arg": arg_val})
+                    print(f"case:0x{case_val:03x} arg@{arg_val:x}")
                 break
-            ea = idc.next_head(ea)
+                
+            if ins == "retn" or (ins == "jmp" and ea != target_ea):
+                break
 
     def index(self, arg):
         for case in self.content:
