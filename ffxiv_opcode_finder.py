@@ -548,8 +548,13 @@ class ClientZoneIpcType:
         del self.config["__init__"]["ProcessZonePacketUp"]
         print("ClientZone Inited...")
         for name in self.config:
-            if type(self.config[name]) == int:
-                self.find_in_table(self.config[name], name)
+            config_value = self.config[name]
+            if isinstance(config_value, dict) and "Pattern" in config_value and "ReadOffset" in config_value:
+                self.read_bytes_at_offset(config_value["Pattern"], config_value["ReadOffset"], name)
+            elif type(config_value) == int:
+                self.find_in_table(config_value, name)
+            else:
+                print(f"Invalid type in ClientZoneIpc -> {name}")
 
     def find_in_table(self, ea, name):
         maybe = self.table.index(ea)
@@ -567,6 +572,26 @@ class ClientZoneIpcType:
         else:
             print(f"{name} NotFound")
             errors["IndexFailed"].append(name)
+            return False
+        
+    def read_bytes_at_offset(self, pattern, offset, name):
+        addr = find_pattern(pattern)
+        
+        if addr == idc.BADADDR:
+            print(f"ClinetZone {name} pattern not found")
+            errors["SigNotFound"].append(name)
+            return False
+        
+        try:
+            opcode = ida_bytes.get_dword(addr + offset)
+            print(f'Opcode 0x{opcode:03x}({opcode:03d}): {name}')
+            
+            if name not in self.content:
+                self.content[name] = opcode
+
+            return True
+        except Exception as e:
+            print(f"Error reading memory at {addr + offset}: {e}")
             return False
 
 

@@ -542,6 +542,10 @@
                 "opcode":228
             },
             {
+                "name":"Heartbeat",
+                "opcode":867
+            },
+            {
                 "name":"WorldTravel",
                 "opcode":461
             },

@@ -151,6 +151,7 @@ namespace FFXIVOpcodes.CN
         SetSearchInfoHandler = 0x03E0,
         UpdatePositionHandler = 0x02FA,
         UpdatePositionInstance = 0x00E4,
+        Heartbeat = 0x0363,
         WorldTravel = 0x01CD,
         ClientCountdownInitiate = 0x0099,
     };

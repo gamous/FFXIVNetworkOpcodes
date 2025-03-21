@@ -139,6 +139,7 @@
             "SetSearchInfoHandler":992,
             "UpdatePositionHandler":762,
             "UpdatePositionInstance":228,
+            "Heartbeat":867,
             "WorldTravel":461,
             "ClientCountdownInitiate":153
         }
