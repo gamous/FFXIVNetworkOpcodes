@@ -136,6 +136,7 @@
             "ClientTrigger":283,
             "InventoryModifyHandler":923,
             "MarketBoardPurchaseHandler":980,
+            "MarketBoardRequestItemListingInfo":237,
             "SetSearchInfoHandler":992,
             "UpdatePositionHandler":762,
             "UpdatePositionInstance":228,

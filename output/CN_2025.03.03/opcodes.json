@@ -530,6 +530,10 @@
                 "opcode":980
             },
             {
+                "name":"MarketBoardRequestItemListingInfo",
+                "opcode":237
+            },
+            {
                 "name":"SetSearchInfoHandler",
                 "opcode":992
             },

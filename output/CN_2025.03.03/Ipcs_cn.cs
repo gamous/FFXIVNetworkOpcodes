@@ -148,6 +148,7 @@ namespace FFXIVOpcodes.CN
         ClientTrigger = 0x011B,
         InventoryModifyHandler = 0x039B,
         MarketBoardPurchaseHandler = 0x03D4,
+        MarketBoardRequestItemListingInfo = 0x00ED,
         SetSearchInfoHandler = 0x03E0,
         UpdatePositionHandler = 0x02FA,
         UpdatePositionInstance = 0x00E4,
