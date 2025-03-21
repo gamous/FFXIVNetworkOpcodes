@@ -127,7 +127,8 @@
             "SocialList":119,
             "IslandWorkshopSupplyDemand":430,
             "RSV":466,
-            "RSF":367
+            "RSF":367,
+            "WorldVisitQueue":941
         },
         "ClientZoneIpcType":{
             "ActionRequest":146,

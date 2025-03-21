@@ -502,6 +502,10 @@
             {
                 "name":"RSF",
                 "opcode":367
+            },
+            {
+                "name":"WorldVisitQueue",
+                "opcode":941
             }
         ],
         "ClientZoneIpcType":[

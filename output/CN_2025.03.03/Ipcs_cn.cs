@@ -138,6 +138,7 @@ namespace FFXIVOpcodes.CN
         IslandWorkshopSupplyDemand = 0x01AE,
         RSV = 0x01D2,
         RSF = 0x016F,
+        WorldVisitQueue = 0x03AD,
     };
     
     public enum ClientZoneIpcType : ushort
