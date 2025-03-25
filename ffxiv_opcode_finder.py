@@ -132,12 +132,36 @@ class SwitchTable:
     def __init__(self, ea) -> None:
         self.content = []
         self.switch_func = idaapi.get_func(ea)
-        self.switch_address = find_next_insn(ea, "jmp")
-        print(f"switch table at {self.switch_address:x}")
-        switch_info = ida_nalt.get_switch_info(self.switch_address)
+
+        # 查找函数中所有可能的跳转指令
+        potential_switches = []
+        current_addr = self.switch_func.start_ea
+        while current_addr < self.switch_func.end_ea:
+            if idc.print_insn_mnem(current_addr).lower() == "jmp":
+                switch_info = ida_nalt.get_switch_info(current_addr)
+                if switch_info and switch_info.ncases > 0:
+                    potential_switches.append((current_addr, switch_info))
+            current_addr = idc.next_head(current_addr, self.switch_func.end_ea)
+
+        # 如果没有找到任何跳转表, 尝试直接在给定地址处查找
+        if not potential_switches:
+            self.switch_address = find_next_insn(ea, "jmp")
+            switch_info = ida_nalt.get_switch_info(self.switch_address)
+            if switch_info and switch_info.ncases > 0:
+                potential_switches.append((self.switch_address, switch_info))
+
+        # 如果仍然没有找到跳转表, 则退出
+        if not potential_switches:
+            print(f"No valid switch table found for function at {ea:x}")
+            return
+
+        # 选择元素数量最多的跳转表
+        self.switch_address, switch_info = max(potential_switches, key=lambda x: x[1].ncases)
+        
+        print(f"Selected switch table at {self.switch_address:x} with {switch_info.ncases} cases")
         print(switch_info)
-        print(switch_info.ncases)
-        print(switch_info.jumps)
+        print(f"Number of cases: {switch_info.ncases}")
+        print(f"Jumps address: {switch_info.jumps:x}")
 
         bias = switch_info.jumps
         lowcase = switch_info.lowcase
@@ -615,24 +639,42 @@ class ConfigReader:
     def sig2addr(self, sig, name):
         address = idc.BADADDR
         _sig = None
+
         if type(sig) == str:
             _sig = sig
         elif type(sig) == dict:
             if "Signature" in sig:
-                _sig = sig["Signature"]
-            if Region == "Global" and "Global" in sig:
-                return self.sig2addr(sig["Global"], name)
-            elif Region == "CN" and "CN" in sig:
-                return self.sig2addr(sig["CN"], name)
-            elif Region == "KR" and "KR" in sig:
-                return self.sig2addr(sig["KR"], name)
-            if not _sig:
+                if isinstance(sig["Signature"], dict):
+                    if Region == "Global" and "Global" in sig["Signature"]:
+                        _sig = sig["Signature"]["Global"]
+                    elif Region == "CN" and "CN" in sig["Signature"]:
+                        _sig = sig["Signature"]["CN"]
+                    elif Region == "KR" and "KR" in sig["Signature"]:
+                        _sig = sig["Signature"]["KR"]
+                else:
+                    _sig = sig["Signature"]
+
+            if _sig is None:
+                if Region == "Global" and "Global" in sig:
+                    return self.sig2addr(sig["Global"], name)
+                elif Region == "CN" and "CN" in sig:
+                    return self.sig2addr(sig["CN"], name)
+                elif Region == "KR" and "KR" in sig:
+                    return self.sig2addr(sig["KR"], name)
+            
+            if _sig is None:
                 return sig
 
+        if not _sig:
+            print(f"No valid signature found for {name}")
+            errors["SigNotFound"].append(name)
+            return None
+
         if "Index" in sig and int(sig["Index"]):
-                address = find_pattern(_sig, sig["Index"]+1)
+            address = find_pattern(_sig, sig["Index"]+1)
         else:
             address = find_pattern(_sig)
+
         if address == idc.BADADDR:
             print(f"Signature {name} Not Found")
             errors["SigNotFound"].append(name)
