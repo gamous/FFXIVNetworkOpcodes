@@ -34,7 +34,7 @@ namespace FFXIVOpcodes.Global
         ActorControlTarget = 0x0208,
         ActorControlSelf = 0x0272,
         DirectorVars = 0x038E,
-        EnvironmentControl = 0x01D8,
+        MapEffect = 0x01D8,
         MapEffect4 = 0x010C,
         MapEffect8 = 0x0343,
         MapEffect12 = 0x013D,

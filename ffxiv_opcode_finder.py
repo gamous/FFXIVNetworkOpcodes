@@ -821,7 +821,7 @@ lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.000
 				<Opcode Name="ActorControl" Id="{serverzone.content["ActorControl"]}" />
 				<Opcode Name="ActorControlSelf" Id="{serverzone.content["ActorControlSelf"]}" />
 				<Opcode Name="ActorControlTarget" Id="{serverzone.content["ActorControlTarget"]}" />
-				<Opcode Name="MapEffect" Id="{serverzone.content["EnvironmentControl"]}" />
+				<Opcode Name="MapEffect" Id="{serverzone.content["MapEffect"]}" />
 				<Opcode Name="EventPlay" Id="{serverzone.content["EventPlay"]}" />
 				<Opcode Name="EventPlay64" Id="{serverzone.content["EventPlay64"]}" />
 			</Opcodes>
