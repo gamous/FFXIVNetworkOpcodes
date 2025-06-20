@@ -92,6 +92,18 @@
                 "opcode":472
             },
             {
+                "name":"MapEffect4",
+                "opcode":268
+            },
+            {
+                "name":"MapEffect8",
+                "opcode":835
+            },
+            {
+                "name":"MapEffect12",
+                "opcode":317
+            },
+            {
                 "name":"_record_unk29_",
                 "opcode":191
             },
