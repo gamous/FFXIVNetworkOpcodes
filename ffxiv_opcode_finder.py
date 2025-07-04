@@ -60,7 +60,7 @@ errors = {
 #########
 # Utils #
 #########
-JMP_INS = ["jmp", "jz", "ja", "jb", "jnz"]
+JMP_INS = ["jmp", "ja", "jz", "jnz", "je", "jne", "jg", "jge", "jl", "jle"]
 CALL_INS = ["call"]
 RET_INS = ["ret", "retn"]
 CTRL_INS = JMP_INS + CALL_INS + RET_INS
@@ -200,64 +200,168 @@ class SwitchTable:
 
 
 class SimpleSwitch:
-    def __init__(self, switch_address) -> None:
+    def __init__(self, switch_address):
         self.content = []
         self.switch_func = idaapi.get_func(switch_address)
-        self.switch_func_item = list(idautils.FuncItems(switch_address))
-        self.process_case_block(self.switch_func.start_ea, 0, 0, False,'')
-        print(self.content)
+        if not self.switch_func:
+            print(f"Error: Could not find function at 0x{switch_address:x}")
+            return
+        
+        self.switch_func_item = list(idautils.FuncItems(self.switch_func.start_ea))
 
+        if self._is_old_sub_chain_pattern():
+            print("Detected old 'sub-chain' pattern. Using legacy parser.")
+            self.process_case_block(self.switch_func.start_ea, 0, 0, False, '')
+        else:
+            print("Detected new 'cmp-jmp' pattern. Using modern parser.")
+            self._process_new_cmp_jmp_pattern()
+        
+        print("--- Extraction Complete ---")
+        if not self.content:
+            print("Warning: No case-arg pairs were extracted. The code pattern might have changed again.")
+        else:
+            final_content = []
+            seen_args = set()
+            for item in sorted(self.content, key=lambda x: x['case']):
+                if item['arg'] not in seen_args:
+                    final_content.append(item)
+                    seen_args.add(item['arg'])
+
+            self.content = final_content
+            for item in self.content:
+                print(f"Case: 0x{item['case']:04X} -> Arg: {item['arg']} (0x{item['arg']:X})")
+            print(f"Total items found: {len(self.content)}")
+
+    def _is_old_sub_chain_pattern(self):
+        for ea in self.switch_func_item:
+            if idc.print_insn_mnem(ea) == "sub" and "r10d" in idc.print_operand(ea, 0):
+                 return True
+        return False
+
+    # Old 'sub-chain' pattern
     def process_case_block(self, start, rcase, ccase, iscmp, reg):
-        _reg=reg #r10d
+        _reg = reg
         _reg_case = rcase
         _t_mov_op1 = 0
         _t_cmp_tmp = ccase
         _t_cmp_yes = iscmp
-        
         for ea in self.switch_func_item:
-            if ea < start:
-                continue
+            if ea < start: continue
+            if not self.switch_func.contains(ea): continue
             ins = idc.print_insn_mnem(ea)
             op0 = idc.print_operand(ea, 0)
             op1 = idc.print_operand(ea, 1)
             if ins in JMP_INS:
-                self.process_case_block(
-                    get_ctrl_target(ea), _reg_case, _t_cmp_tmp, _t_cmp_yes, _reg
-                )
+                target_ea = get_ctrl_target(ea)
+                if target_ea > ea: self.process_case_block(target_ea, _reg_case, _t_cmp_tmp, _t_cmp_yes, _reg)
                 continue
-            if ins in RET_INS:
-                continue
+            if ins in RET_INS: continue
             if ins == "mov":
-                _t_mov_op1 = int(op1.strip('h'), 16)
+                if idc.get_operand_type(ea, 1) == idaapi.o_imm: _t_mov_op1 = idc.get_operand_value(ea, 1)
                 continue
-            if ins == "movzx" and op1=='r8w':
-                _reg=op0
-                print(_reg)
+            if ins == "movzx" and op1 == 'r8w':
+                _reg = op0
                 continue
             if ins == "call":
                 _case = _t_cmp_tmp if _t_cmp_yes else _reg_case
-                if self.index(_t_mov_op1):
-                    continue
+                if self.index(_t_mov_op1) or _t_mov_op1 == 0: continue
                 self.content.append({"case": _case, "arg": _t_mov_op1})
-                print(f"case:0x{_case:03x} arg@{_t_mov_op1:x}")
                 continue
             if ins == "cmp" and op0 == _reg:
-                if idc.print_insn_mnem(idc.next_head(ea)) == 'jnz':
-                    _reg_case += int(op1.strip('h'), 16)
-                    _t_cmp_yes = False
-                else:
-                    _t_cmp_tmp = int(op1.strip('h'), 16)
-                    _t_cmp_yes = True
+                if idc.get_operand_type(ea, 1) == idaapi.o_imm:
+                    val = idc.get_operand_value(ea, 1)
+                    if idc.print_insn_mnem(idc.next_head(ea)) == 'jnz':
+                        _reg_case += val
+                        _t_cmp_yes = False
+                    else:
+                        _t_cmp_tmp = val
+                        _t_cmp_yes = True
                 continue
             if ins == "sub" and op0 == _reg:
-                _reg_case += int(op1.strip('h'), 16)
-                _t_cmp_yes = False
+                if idc.get_operand_type(ea, 1) == idaapi.o_imm:
+                    _reg_case += idc.get_operand_value(ea, 1)
+                    _t_cmp_yes = False
                 continue
 
+    # New 'cmp-jmp' pattern
+    def _process_new_cmp_jmp_pattern(self):
+        processed_handlers = set()
+
+        for ea in self.switch_func_item:
+            if not (idc.print_insn_mnem(ea) == "cmp" and idc.print_operand(ea, 0) == 'r8w'):
+                continue
+
+            case_val = None
+            if idc.get_operand_type(ea, 1) == idaapi.o_imm:
+                case_val = idc.get_operand_value(ea, 1)
+            else:
+                case_val = self._find_case_for_cmp(ea)
+
+            if case_val is None:
+                continue
+
+            current_ea = ea
+            for _ in range(5): 
+                current_ea = idc.next_head(current_ea)
+                if not current_ea or not self.switch_func.contains(current_ea):
+                    break
+
+                mnem = idc.print_insn_mnem(current_ea)
+
+                if mnem in ["jz", "je"]:
+                    target_ea = get_ctrl_target(current_ea)
+                    if target_ea not in processed_handlers:
+                        arg_val = self._find_arg_in_block(target_ea)
+                        if arg_val is not None:
+                            self.content.append({"case": case_val, "arg": arg_val})
+                            processed_handlers.add(target_ea)
+                
+                elif mnem in ["jnz", "jne"]:
+                    fallthrough_ea = idc.next_head(current_ea)
+                    if fallthrough_ea not in processed_handlers:
+                        arg_val = self._find_arg_in_block(fallthrough_ea)
+                        if arg_val is not None:
+                            self.content.append({"case": case_val, "arg": arg_val})
+                            processed_handlers.add(fallthrough_ea)
+                
+                elif not mnem.startswith('j'):
+                    if current_ea not in processed_handlers:
+                        arg_val = self._find_arg_in_block(current_ea)
+                        if arg_val is not None:
+                            self.content.append({"case": case_val, "arg": arg_val})
+                            processed_handlers.add(current_ea)
+                    break
+
+    def _find_case_for_cmp(self, cmp_ea):
+        if idc.get_operand_type(cmp_ea, 1) != idaapi.o_reg: return None
+        cmp_op1_reg = idc.print_operand(cmp_ea, 1)
+        prev_ea = cmp_ea
+        for _ in range(5):
+            prev_ea = idc.prev_head(prev_ea)
+            if not prev_ea or prev_ea < self.switch_func.start_ea: break
+            mov_op0_reg = idc.print_operand(prev_ea, 0)
+            if idc.print_insn_mnem(prev_ea) == "mov" and cmp_op1_reg in mov_op0_reg:
+                if idc.get_operand_type(prev_ea, 1) == idaapi.o_imm:
+                    return idc.get_operand_value(prev_ea, 1)
+        return None
+
+    def _find_arg_in_block(self, block_start_ea):
+        current_ea = block_start_ea
+        for _ in range(15):
+            if not self.switch_func.contains(current_ea): break
+            insn_mnem = idc.print_insn_mnem(current_ea)
+            if insn_mnem == "mov" and idc.get_operand_type(current_ea, 0) == idaapi.o_displ:
+                if idc.get_operand_type(current_ea, 1) == idaapi.o_imm:
+                    return idc.get_operand_value(current_ea, 1)
+            if insn_mnem.startswith('j') or insn_mnem.startswith('ret'):
+                break
+            current_ea = idc.next_head(current_ea)
+        return None
+
     def index(self, arg):
-        for case in self.content:
-            if case["arg"] == arg:
-                return case["case"]
+        for item in self.content:
+            if item["arg"] == arg:
+                return item["case"]
         return None
     
 class SimpleSwitch2:
