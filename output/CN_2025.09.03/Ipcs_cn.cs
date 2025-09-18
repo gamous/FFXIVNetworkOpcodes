@@ -101,7 +101,7 @@ namespace FFXIVOpcodes.CN
         EquipDisplayFlags = 0x0262,
         UnMount = 0x03E3,
         Mount = 0x02A5,
-        CountdownInitiate = 0x010E,
+        CountdownInitiate = 0x0388,
         CountdownCancel = 0x00EC,
         InitZone = 0x0148,
         Examine = 0x02FD,
