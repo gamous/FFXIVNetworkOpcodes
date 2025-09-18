@@ -285,7 +285,7 @@
       "KR": "48 8B C8 E8 ? ? ? ? 48 83 C4 30 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC 40 53"
     },
     "PlayMotionSync": "",
-    "CountdownInitiate": "E8 ? ? ? ? 48 85 C0 74 22 F6 05 ? ? ? ? ?",
+    "CountdownInitiate": "40 53 48 83 EC ? 48 8B 0D ? ? ? ? 48 8B DA E8 ? ? ? ? 48 85 C0 74 ? 4C 8B 00 48 8B C8 41 FF 90 28 01 00 00 48 8B C8 BA ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3 48 8B C8 48 83 C4 ? 5B E9 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08",
     "CountdownCancel": {
       "Global": "48 ? ? ? ? ? ? 48 89 74 24 ? E8 ? ? ? ? 0F ? ? ? 48",
       "CN": "48 ? ? ? ? ? ? 48 89 74 24 ? E8 ? ? ? ? 0F ? ? ? 48"
