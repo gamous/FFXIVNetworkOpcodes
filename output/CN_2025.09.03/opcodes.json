@@ -357,7 +357,7 @@
             },
             {
                 "name":"CountdownInitiate",
-                "opcode":904
+                "opcode":270
             },
             {
                 "name":"CountdownCancel",
