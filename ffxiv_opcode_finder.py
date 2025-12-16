@@ -36,7 +36,12 @@ for s in slist_s:
         break
 for s in slist_s:
     if r"ffxiv_dx11.pdb" in s:
-        Region_s,version_s=s.split('\\')[4].split('_')
+        if "GenCh" in s: # Why?
+            Region_s = "shanda"
+            version_s = s.split('\\')[4].split('_')[1]
+            break
+
+        Region_s,version_s = s.split('\\')[4].split('_')
         break
 if Region_s == 'shanda':
     Region = 'CN'
