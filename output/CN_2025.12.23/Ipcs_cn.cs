@@ -73,6 +73,7 @@ namespace FFXIVOpcodes.CN
         StatusEffectList = 0x0253,
         StatusEffectList2 = 0x02AA,
         StatusEffectList3 = 0x029C,
+        StatusEffectListForay3 = 0x0392,
         EurekaStatusEffectList = 0x01ED,
         BossStatusEffectList = 0x0168,
         EffectResult = 0x025E,
