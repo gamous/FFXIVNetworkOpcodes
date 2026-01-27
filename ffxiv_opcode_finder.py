@@ -6,10 +6,13 @@ import ida_nalt
 import ida_xref
 import ida_search
 import ida_ua
+import ida_hexrays
 import os
 import json
 import functools
 import re
+import typing
+from ida_hexrays import *
 
 ConfigPath = os.path.dirname(os.path.realpath(__file__))
 OutputPath = os.path.join(
@@ -122,6 +125,148 @@ def find_next_ctrl(cea, down):
             return cea
         cea = idc.next_head(cea)
     return down
+
+# 感谢头子 :))))
+def find_event_packets(func_ea, sender):
+    class OperandLine(typing.NamedTuple):
+        ea: int
+        insn: str
+        op1: int
+        op2: int
+        val1: int
+        val2: int
+
+        a = property(lambda self: (self.op1, self.val1))
+        b = property(lambda self: (self.op2, self.val2))
+
+    get_op = lambda ea: OperandLine(
+        ea,
+        idc.print_insn_mnem(ea),
+        idc.get_operand_type(ea, 0),
+        idc.get_operand_type(ea, 1),
+        idc.get_operand_value(ea, 0),
+        idc.get_operand_value(ea, 1)
+    )
+
+    func = idaapi.get_func(func_ea)
+
+    def find_set(ea, o, v):
+        analyzed = set()
+        to_analyze = [ea]
+
+        while to_analyze:
+            analyzed.add(cur := to_analyze.pop())
+
+            op = get_op(cur)
+
+            if op.op1 == o and op.val1 == v:
+                if op.insn == "lea":
+                    if op.op2 == idaapi.o_displ:
+                        yield from find_set(cur, idaapi.o_displ, op.val2)
+                        continue
+                    else:
+                        raise ValueError(f"Unexpected instruction at {hex(cur)}")
+                elif op.insn == "mov":
+                    if op.op2 == idaapi.o_imm:
+                        yield cur, op.val2
+                        continue
+                    else:
+                        raise ValueError(f"Unexpected instruction at {hex(cur)}")
+
+            for xref in idautils.XrefsTo(cur):
+                if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.frm) and xref.frm not in analyzed:
+                    to_analyze.append(xref.frm)
+
+    set_vals = {}
+
+    class CV(ctree_visitor_t):
+        def visit_expr(self, expr: cexpr_t) -> int:
+            if expr.op == cot_call and idc.get_operand_value(expr.ea, 0) == sender:
+                for ea, v in find_set(expr.ea, idaapi.o_reg, 2):
+                    assert ea not in set_vals
+                    set_vals[ea] = v
+            return 0
+
+    CV(CV_FAST).apply_to(ida_hexrays.decompile(func.start_ea).body, None)
+
+    def find_cond(start_ea, end_eas):
+        analyzed = set()
+        to_analyze = [(start_ea, [], None)]
+
+        while to_analyze:
+            cur, conds, last_cond = to_analyze.pop()
+            analyzed.add(cur)
+            if cur in end_eas:
+                yield cur, conds
+                continue
+            op = get_op(cur)
+            xrefs = [xref for xref in idautils.XrefsFrom(cur) if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.to)]
+            if len(xrefs) == 2:
+                for xref in xrefs:
+                    to_analyze.append((xref.to, conds + [(cur, op.insn, last_cond, xref.type == ida_xref.fl_F)], last_cond))
+            elif len(xrefs) <= 1:
+                if op.insn in ("test", "cmp"): last_cond = op
+                to_analyze.extend((xref.to, conds, last_cond) for xref in xrefs if xref.to not in analyzed)
+            else:
+                raise ValueError(f"Unexpected number of xrefs at {hex(cur)}")
+
+    for ea, conds in find_cond(func.start_ea, set_vals):
+        v = set_vals[ea]
+        last_op = conds[-1][2]
+        if last_op.op2 != idaapi.o_imm:
+            raise ValueError(f"Last condition is not an immediate value at {hex(ea)}")
+        max_va = 255
+        min_val = 0
+        for ea_, insn, op, is_def in reversed(conds):
+            if op.a != last_op.a: break
+            if op.op2 != idaapi.o_imm: continue  # no need to handle this case
+            if op.insn == "test":
+                raise ValueError(f"Should not have test instruction at {hex(ea_)}")
+                # if insn == "jnz":
+                #     desc = "!&" if is_def else "&"
+                # elif insn == "jz":
+                #     desc = "&" if is_def else "!&"
+                # else:
+                #     raise ValueError(f"Unexpected instruction at {hex(ea_)}")
+            elif op.insn == "cmp":
+                if insn == "jge":
+                    desc = "<" if is_def else ">="
+                elif insn == "jle":
+                    desc = ">" if is_def else "<="
+                elif insn == "jg":
+                    desc = "<=" if is_def else ">"
+                elif insn == "jl":
+                    desc = ">=" if is_def else "<"
+                elif insn == "ja":
+                    desc = "<=" if is_def else ">"
+                elif insn == "jae":
+                    desc = "<" if is_def else ">="
+                elif insn == "jb":
+                    desc = ">=" if is_def else "<"
+                elif insn == "jbe":
+                    desc = ">" if is_def else "<="
+                elif insn == "je":
+                    desc = "!=" if is_def else "=="
+                elif insn == "jne":
+                    desc = "==" if is_def else "!="
+                else:
+                    raise ValueError(f"Unexpected instruction at {hex(ea_)}")
+            else:
+                raise ValueError(f"Unexpected instruction at {hex(ea_)}")
+            match desc:
+                case "<":
+                    max_va = min(max_va, op.val2 - 1)
+                case ">":
+                    min_val = max(min_val, op.val2 + 1)
+                case "<=":
+                    max_va = min(max_va, op.val2)
+                case ">=":
+                    min_val = max(min_val, op.val2)
+                case "==":
+                    max_va = min(max_va, op.val2)
+                    min_val = max(min_val, op.val2)
+                    break
+        yield v, min_val, max_va, conds
 
 
 #'ZoneClientIpc'
@@ -677,17 +822,129 @@ class ClientZoneIpcType:
     def __init__(self, config) -> None:
         self.config = config.content["ClientZoneIpcType"]
         self.content = {}
-        self.table = CallTable(self.config["__init__"]["ProcessZonePacketUp"])
-        del self.config["__init__"]["ProcessZonePacketUp"]
+
+        # ProcessZonePacketUp 是最底层的发送函数
+        base_sender_ea = self.config["__init__"]["ProcessZonePacketUp"]
+        self.table = CallTable(base_sender_ea)
+
+        # 查找 wrapper 函数（调用 ProcessZonePacketUp 的函数）
+        wrapper_funcs = self.find_wrapper_functions(base_sender_ea)
+        print(f"Found {len(wrapper_funcs)} potential wrapper functions")
+
+        # 初始化事件包查找器字典
+        self.event_funcs = {}
+        for func_name in list(self.config.get("__init__", {}).keys()):
+            if func_name == "ProcessZonePacketUp":
+                continue  # 跳过基础发送函数本身
+
+            func_ea = self.config["__init__"][func_name]
+            if func_ea:
+                try:
+                    # 尝试为该函数找到合适的 sender（wrapper）
+                    sender_ea = self.find_best_sender(func_ea, wrapper_funcs)
+                    if sender_ea != idc.BADADDR:
+                        # 将生成器转换为列表
+                        self.event_funcs[func_name] = list(find_event_packets(func_ea, sender_ea))
+                        print(f"Initialized event packet finder for {func_name} with sender@{sender_ea:x}: found {len(self.event_funcs[func_name])} entries")
+                    else:
+                        print(f"Could not find suitable sender for {func_name}")
+                except Exception as e:
+                    print(f"Failed to initialize event packet finder for {func_name}: {e}")
+
+        if "__init__" in self.config:
+            del self.config["__init__"]
+
         print("ClientZone Inited...")
         for name in self.config:
             config_value = self.config[name]
-            if isinstance(config_value, dict) and "Pattern" in config_value and "ReadOffset" in config_value:
-                self.read_bytes_at_offset(config_value["Pattern"], config_value["ReadOffset"], name)
+            if isinstance(config_value, dict):
+                if "Pattern" in config_value and "ReadOffset" in config_value:
+                    self.read_bytes_at_offset(config_value["Pattern"], config_value["ReadOffset"], name)
+                elif "Function" in config_value and "Param" in config_value:
+                    func = config_value["Function"]
+                    param = config_value["Param"]
+                    self.find_in_event_packets(func, param, name)
             elif type(config_value) == int:
                 self.find_in_table(config_value, name)
             else:
                 print(f"Invalid type in ClientZoneIpc -> {name}")
+
+    def find_wrapper_functions(self, base_sender_ea):
+        """查找所有调用 ProcessZonePacketUp 的 wrapper 函数（递归查找多层）"""
+        wrappers = []
+
+        def find_callers_recursive(ea, depth=0, max_depth=3):
+            """递归查找调用链，最多3层"""
+            if depth > max_depth:
+                return
+
+            for xref in idautils.XrefsTo(ea):
+                if xref.type in (ida_xref.fl_CN, ida_xref.fl_CF):  # Call xrefs
+                    caller_func = idaapi.get_func(xref.frm)
+                    if caller_func and caller_func.start_ea not in wrappers:
+                        wrappers.append(caller_func.start_ea)
+                        print(f"Found wrapper function at {caller_func.start_ea:x} (depth={depth})")
+                        # 继续向上查找
+                        find_callers_recursive(caller_func.start_ea, depth + 1, max_depth)
+
+        find_callers_recursive(base_sender_ea)
+        return wrappers
+
+    def find_best_sender(self, func_ea, wrapper_funcs):
+        """为目标函数找到最合适的 sender（wrapper）函数"""
+        func = idaapi.get_func(func_ea)
+        if not func:
+            return idc.BADADDR
+
+        # 收集目标函数调用的所有函数
+        called_funcs = set()
+        for item_ea in idautils.FuncItems(func.start_ea):
+            if idc.print_insn_mnem(item_ea) == "call":
+                target = get_ctrl_target(item_ea)
+                if target != idc.BADADDR:
+                    called_funcs.add(target)
+
+        # 查找目标函数直接调用的 wrapper
+        for wrapper_ea in wrapper_funcs:
+            if wrapper_ea in called_funcs:
+                print(f"Found direct wrapper call: {wrapper_ea:x} for function {func_ea:x}")
+                return wrapper_ea
+
+        # 如果没有直接调用，尝试查找间接调用（通过一层）
+        for called_ea in called_funcs:
+            called_func = idaapi.get_func(called_ea)
+            if called_func:
+                for item_ea in idautils.FuncItems(called_func.start_ea):
+                    if idc.print_insn_mnem(item_ea) == "call":
+                        target = get_ctrl_target(item_ea)
+                        if target in wrapper_funcs:
+                            print(f"Found indirect wrapper call: {target:x} (via {called_ea:x}) for function {func_ea:x}")
+                            return target
+
+        print(f"No wrapper found for function {func_ea:x}")
+        return idc.BADADDR
+
+    def find_in_event_packets(self, func, param, name):
+        """使用 find_event_packets 查找 opcode"""
+        if func not in self.event_funcs:
+            print(f"Event function {func} not found for {name}")
+            errors["FuncNotFound"].append(name)
+            return False
+
+        try:
+            for opcode, min_val, max_val, conds in self.event_funcs[func]:
+                if min_val <= param <= max_val:
+                    self.content[name] = opcode
+                    print(f'Opcode 0x{opcode:03x}({opcode:03d}): {name} (range: {min_val}-{max_val})')
+                    return True
+
+            print(f"Param {param} not found in event packets for {name}")
+            errors["ArgvNotFound"].append(name)
+            return False
+        except Exception as e:
+            print(f"Error finding event packet for {name}: {e}")
+            errors["ArgvNotFound"].append(name)
+            return False
 
     def find_in_table(self, ea, name):
         maybe = self.table.index(ea)

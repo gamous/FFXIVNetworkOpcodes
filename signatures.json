@@ -342,7 +342,9 @@
   },
   "ClientZoneIpcType": {
     "__init__": {
-      "ProcessZonePacketUp": "48 89 5C 24 ? 48 89 74 24 ? 4C 89 64 24 ? 55 41 ? 41 ? 48 ? ? 48 ? ? ? 48"
+      "ProcessZonePacketUp": "48 89 5C 24 ? 48 89 74 24 ? 4C 89 64 24 ? 55 41 ? 41 ? 48 ? ? 48 ? ? ? 48",
+      "EventAction": "4C ? ? 49 89 73 ? 55 41 ? 41 ? 49 ? ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 48 89 85 ? ? ? ? F6 05 ? ? ? ? ? 41 ? ? ? 44",
+      "EventFinish": "4C ? ? 49 89 73 ? 55 41 ? 41 ? 49 ? ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 48 89 85 ? ? ? ? F6 05 ? ? ? ? ? 41 ? ? 44"
     },
     "ActionRequest": "C7 44 24 20 ? ? ? ? 45 33 C0 48 C7 44 24 28 ? ? ? ? 89 7C 24 40",
     "ActionRequestGroundTargeted": "C7 44 24 20 ? ? ? ? 48 C7 44 24 28 ? ? ? ? 89 74 24 40 40 88 6C 24 45",
@@ -362,6 +364,70 @@
       "ReadOffset": 4
     },
     "WorldTravel": "C7 45 ?? ?? ?? ?? ?? 48 8B C8 48 C7 45",
-    "ClientCountdownInitiate": "C7 44 24 ? ? ? ? ? 48 ? ? 48 C7 44 24 ? ? ? ? ? 0F 11 44 24 ? 66 89 74 24"
+    "ClientCountdownInitiate": "C7 44 24 ? ? ? ? ? 48 ? ? 48 C7 44 24 ? ? ? ? ? 0F 11 44 24 ? 66 89 74 24",
+    "EventAction1": {
+      "Function": "EventAction",
+      "Param": 1
+    },
+    "EventAction4": {
+      "Function": "EventAction",
+      "Param": 4
+    },
+    "EventAction8": {
+      "Function": "EventAction",
+      "Param": 8
+    },
+    "EventAction16": {
+      "Function": "EventAction",
+      "Param": 16
+    },
+    "EventAction32": {
+      "Function": "EventAction",
+      "Param": 32
+    },
+    "EventAction64": {
+      "Function": "EventAction",
+      "Param": 64
+    },
+    "EventAction128": {
+      "Function": "EventAction",
+      "Param": 128
+    },
+    "EventAction255": {
+      "Function": "EventAction",
+      "Param": 255
+    },
+    "EventFinish1": {
+      "Function": "EventFinish",
+      "Param": 1
+    },
+    "EventFinish4": {
+      "Function": "EventFinish",
+      "Param": 4
+    },
+    "EventFinish8": {
+      "Function": "EventFinish",
+      "Param": 8
+    },
+    "EventFinish16": {
+      "Function": "EventFinish",
+      "Param": 16
+    },
+    "EventFinish32": {
+      "Function": "EventFinish",
+      "Param": 32
+    },
+    "EventFinish64": {
+      "Function": "EventFinish",
+      "Param": 64
+    },
+    "EventFinish128": {
+      "Function": "EventFinish",
+      "Param": 128
+    },
+    "EventFinish255": {
+      "Function": "EventFinish",
+      "Param": 255
+    }
   }
 }

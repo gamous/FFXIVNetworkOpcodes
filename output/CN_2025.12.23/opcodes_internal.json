@@ -145,7 +145,23 @@
             "UpdatePositionInstance":202,
             "Heartbeat":322,
             "WorldTravel":738,
-            "ClientCountdownInitiate":776
+            "ClientCountdownInitiate":776,
+            "EventAction1":609,
+            "EventAction4":559,
+            "EventAction8":198,
+            "EventAction16":577,
+            "EventAction32":668,
+            "EventAction64":848,
+            "EventAction128":487,
+            "EventAction255":904,
+            "EventFinish1":411,
+            "EventFinish4":839,
+            "EventFinish8":985,
+            "EventFinish16":867,
+            "EventFinish32":984,
+            "EventFinish64":423,
+            "EventFinish128":997,
+            "EventFinish255":525
         }
     }
 }
