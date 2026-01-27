@@ -158,6 +158,22 @@ namespace FFXIVOpcodes.CN
         Heartbeat = 0x0142,
         WorldTravel = 0x02E2,
         ClientCountdownInitiate = 0x0308,
+        EventAction1 = 0x0261,
+        EventAction4 = 0x022F,
+        EventAction8 = 0x00C6,
+        EventAction16 = 0x0241,
+        EventAction32 = 0x029C,
+        EventAction64 = 0x0350,
+        EventAction128 = 0x01E7,
+        EventAction255 = 0x0388,
+        EventFinish1 = 0x019B,
+        EventFinish4 = 0x0347,
+        EventFinish8 = 0x03D9,
+        EventFinish16 = 0x0363,
+        EventFinish32 = 0x03D8,
+        EventFinish64 = 0x01A7,
+        EventFinish128 = 0x03E5,
+        EventFinish255 = 0x020D,
     };
     
     public enum ServerChatIpcType : ushort

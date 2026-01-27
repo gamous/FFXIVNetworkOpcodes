@@ -568,6 +568,70 @@
             {
                 "name":"ClientCountdownInitiate",
                 "opcode":308
+            },
+            {
+                "name":"EventAction1",
+                "opcode":178
+            },
+            {
+                "name":"EventAction4",
+                "opcode":124
+            },
+            {
+                "name":"EventAction8",
+                "opcode":252
+            },
+            {
+                "name":"EventAction16",
+                "opcode":454
+            },
+            {
+                "name":"EventAction32",
+                "opcode":235
+            },
+            {
+                "name":"EventAction64",
+                "opcode":441
+            },
+            {
+                "name":"EventAction128",
+                "opcode":239
+            },
+            {
+                "name":"EventAction255",
+                "opcode":211
+            },
+            {
+                "name":"EventFinish1",
+                "opcode":712
+            },
+            {
+                "name":"EventFinish4",
+                "opcode":691
+            },
+            {
+                "name":"EventFinish8",
+                "opcode":224
+            },
+            {
+                "name":"EventFinish16",
+                "opcode":234
+            },
+            {
+                "name":"EventFinish32",
+                "opcode":487
+            },
+            {
+                "name":"EventFinish64",
+                "opcode":228
+            },
+            {
+                "name":"EventFinish128",
+                "opcode":268
+            },
+            {
+                "name":"EventFinish255",
+                "opcode":119
             }
         ]
     }
