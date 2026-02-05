@@ -7,16 +7,18 @@
         "KR": "40 53 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 70 8B F2"
       },
       "EffectResult": {
+        "Comment": "Search for 48 ? ? 44 88 40 ? 89 48 and goto second xref",
         "Signature": {
           "Global": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 44 0F B7 47 02",
-          "CN": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 41 8B CE E8 ? ? ? ? E9 ? ? ? ? 44 0F B7 47 02"
+          "CN": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 44 0F B7 47 02"
         },
         "Type": "Call"
       },
       "EffectResultBasic": {
+        "Comment": "40 ? 41 ? 41 ? 48 ? ? ? 83 3D, same as EffectResult",
         "Signature": {
           "Global": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 4C 8D 47 10",
-          "CN": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 41 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 41 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 41 8B CE E8 ? ? ? ? E9 ? ? ? ? 4C 8D 47 10"
+          "CN": "E8 ? ? ? ? 45 33 C0 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 48 8D 57 10 8B CE E8 ? ? ? ? E9 ? ? ? ? 4C 8D 47 10"
         },
         "Type": "Call"
       },
@@ -36,9 +38,10 @@
         "Type": "Call"
       },
       "BalloonTalk": {
+        "Comment": "48 89 5C 24 ? 57 48 ? ? ? 41 ? ? 49 ? ? E8, trace back to PacketHandler xref",
         "Signature": {
           "Global": "E8 ? ? ? ? 44 38 77 ? 4C",
-          "CN": "E8 ? ? ? ? 44 38 7F ? 4C"
+          "CN": "E8 ? ? ? ? 44 38 77 30 4C 8D 47 34"
         },
         "Type": "Call"
       }
