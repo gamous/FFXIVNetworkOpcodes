@@ -307,28 +307,36 @@ class SwitchTable:
 
         # 选择元素数量最多的跳转表
         self.switch_address, switch_info = max(potential_switches, key=lambda x: x[1].ncases)
-        
+
         print(f"Selected switch table at {self.switch_address:x} with {switch_info.ncases} cases")
         print(switch_info)
         print(f"Number of cases: {switch_info.ncases}")
         print(f"Jumps address: {switch_info.jumps:x}")
 
-        bias = switch_info.jumps
-        lowcase = switch_info.lowcase
-        element_num = switch_info.get_jtable_size()
-        element_size = switch_info.get_jtable_element_size()
+        # Use calc_switch_cases to correctly handle compressed jump tables
+        results = ida_xref.calc_switch_cases(self.switch_address, switch_info)
 
-        for i in range(0, element_num):
-            table_entry = bias + i * element_size
-            startea = switch_info.elbase + idc.get_wide_dword(table_entry)
+        # Build a map from target address to case values
+        target_to_cases = {}
+        for idx in range(len(results.cases)):
+            target = results.targets[idx]
+            cases = results.cases[idx]
+            if target not in target_to_cases:
+                target_to_cases[target] = []
+            for case_val in cases:
+                target_to_cases[target].append(case_val)
+
+        # Process each unique target
+        for target, case_list in target_to_cases.items():
+            startea = target
             endea = min(
                 find_next_insn(startea, "jmp", 1000),
                 find_next_insn(startea, "retn", 1000),
             )
-            print(
-                f"case 0x{i+lowcase:03x}: table@{table_entry:x} jmp@{startea:x} - {endea:x}"
-            )
-            self.content.append({"case": i + lowcase, "start": startea, "end": endea})
+            # Add an entry for each case value
+            for case_val in case_list:
+                print(f"case 0x{case_val:03x}: jmp@{startea:x} - {endea:x}")
+                self.content.append({"case": case_val, "start": startea, "end": endea})
         return
 
     def in_switch(self, ea) -> bool:
@@ -369,6 +377,7 @@ class SimpleSwitch:
         print("--- Extraction Complete ---")
         if not self.content:
             print("Warning: No case-arg pairs were extracted. The code pattern might have changed again.")
+            raise ValueError("SimpleSwitch failed to extract any case-arg pairs")
         else:
             final_content = []
             seen_args = set()
@@ -521,6 +530,8 @@ class SimpleSwitch2:
         self.switch_func_item = list(idautils.FuncItems(switch_address))
         self.process_case_block(self.switch_func.start_ea)
         print(self.content)
+        if (self.content == []):
+            raise ValueError("SimpleSwitch2 failed to extract any case-arg pairs")
 
     def process_case_block(self, start):
         _current_case = None
@@ -619,33 +630,56 @@ class SwitchTableX:
         self.switch_address = find_next_insn(ea, "jmp")
         print(f"switch table at {self.switch_address:x} <- {ea:x}")
         switch_info = ida_nalt.get_switch_info(self.switch_address)
-        print(switch_info)
-        print(switch_info.ncases)
-        print(switch_info.jumps)
-        print(switch_info.lowcase)
-        bias = switch_info.jumps
-        
-        element_num = switch_info.get_jtable_size()
-        element_size = switch_info.get_jtable_element_size()
 
-        mapcase =  map_switch_jumps(self.switch_address)
-        for i in range(0, element_num):
-            table_entry = bias + i * element_size
-            startea = switch_info.elbase + idc.get_wide_dword(table_entry)
+        if not switch_info:
+            print(f"Error: No switch info found at {self.switch_address:x}")
+            return
+
+        print(f"ncases: {switch_info.ncases}")
+        print(f"jumps: {switch_info.jumps:x}")
+
+        # Use calc_switch_cases to correctly handle compressed jump tables
+        results = ida_xref.calc_switch_cases(self.switch_address, switch_info)
+
+        # Build a map from target address to case values
+        target_to_cases = {}
+        for idx in range(len(results.cases)):
+            target = results.targets[idx]
+            cases = results.cases[idx]
+            if target not in target_to_cases:
+                target_to_cases[target] = []
+            for case_val in cases:
+                target_to_cases[target].append(case_val)
+
+        # Process each unique target
+        for target, case_list in target_to_cases.items():
+            startea = target
             endea = min(
                 find_next_insn(startea, "jmp", 1000),
                 find_next_insn(startea, "retn", 1000),
             )
-            caseid=list(mapcase.get(startea, set()))[0]
-            movea = find_next_insn(startea, "mov", endea-startea)
-            op1 = idc.print_operand(movea , 1)
-            print(op1)
-            try:
-                _t_mov_op1 = int(op1.strip('h'), 16)
-            except:
-                _t_mov_op1 = 0xffff
-            print(f"case:{caseid:x} arg:{_t_mov_op1:x}")
-            self.content.append({"case": caseid, "arg": _t_mov_op1})
+
+            # Find mov instruction with immediate value
+            arg_val = None
+            movea = startea
+            for _ in range(10):
+                if idc.print_insn_mnem(movea) == "mov":
+                    op0 = idc.print_operand(movea, 0)
+                    # Look for mov [rsp+xx], imm
+                    if "[rsp" in op0 and idc.get_operand_type(movea, 1) == idaapi.o_imm:
+                        arg_val = idc.get_operand_value(movea, 1)
+                        break
+                if idc.print_insn_mnem(movea) in ["retn", "jmp"]:
+                    break
+                movea = idc.next_head(movea)
+
+            if arg_val is None:
+                arg_val = 0xffff
+
+            # Add an entry for each case value
+            for caseid in case_list:
+                print(f"case:0x{caseid:x} arg:0x{arg_val:x}")
+                self.content.append({"case": caseid, "arg": arg_val})
 
     def index(self, arg):
         for case in self.content:
@@ -732,11 +766,14 @@ class ServerZoneIpcType:
         for func in self.config["__init__"]:
             if self.config["__init__"][func]:
                 try:
+                    print(f"Init SimpleSwitch {func}")
                     self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
                 except:
                     try:
+                        print(f"Init SimpleSwitch2 {func}")
                         self.funcs[func] = SimpleSwitch2(self.config["__init__"][func])
                     except:
+                        print(f"Init SwitchTableX {func}")
                         self.funcs[func] = SwitchTableX(self.config["__init__"][func])
         del self.config["__init__"]
         print("ServerZone Inited...")
