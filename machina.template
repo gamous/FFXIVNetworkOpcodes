@@ -2,6 +2,7 @@ StatusEffectList|{StatusEffectList}
 StatusEffectList2|{StatusEffectList2}
 StatusEffectList3|{StatusEffectList3}
 BossStatusEffectList|{BossStatusEffectList}
+StatusEffectListForay3|{StatusEffectListForay3}
 Ability1|{Effect}
 Ability8|{AoeEffect8}
 Ability16|{AoeEffect16}
