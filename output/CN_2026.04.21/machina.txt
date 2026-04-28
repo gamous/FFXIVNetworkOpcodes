@@ -2,7 +2,7 @@ StatusEffectList|117
 StatusEffectList2|3DC
 StatusEffectList3|336
 BossStatusEffectList|232
-StatusEffectListForay3|10E
+StatusEffectListForay3|12B
 Ability1|39A
 Ability8|1F2
 Ability16|240
