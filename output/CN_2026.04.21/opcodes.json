@@ -245,7 +245,7 @@
             },
             {
                 "name":"StatusEffectListForay3",
-                "opcode":270
+                "opcode":299
             },
             {
                 "name":"EurekaStatusEffectList",
