@@ -364,7 +364,7 @@
       "ReadOffset": 4
     },
     "SetSearchInfoHandler": "0F 11 41 80 0F 10 43 32 ",
-    "UpdatePositionHandler": "C7 44 24 ? ? ? ? ? 44 8B CB 48 C7 44 24",
+    "UpdatePositionHandler": "C7 44 24 ? ? ? ? ? F7 D9",
     "UpdatePositionInstance": "0F ? ? ? 48 ? ? 0F ? ? 8B ? ? 44",
     "Heartbeat": {
       "Pattern": "C7 44 24 ? ? ? ? ? 48 ? ? 49 ? ? ? ? ? ? 89 45",
