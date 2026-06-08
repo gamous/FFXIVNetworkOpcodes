@@ -97,6 +97,24 @@ EQ_TRUE_JUMP_TYPES = {ida_allins.NN_jz, ida_allins.NN_je}
 EQ_FALSE_JUMP_TYPES = {ida_allins.NN_jnz, ida_allins.NN_jne}
 RETURN_TYPES = {ida_allins.NN_retn, ida_allins.NN_retf}
 JUMP_TYPES = {ida_allins.NN_jmp, ida_allins.NN_jmpfi, ida_allins.NN_jmpni, ida_allins.NN_jmpshort}
+CALL_TYPES = {ida_allins.NN_call, ida_allins.NN_callfi, ida_allins.NN_callni}
+LINEAR_JUMP_TYPES = {
+    ida_allins.NN_jmp,
+    ida_allins.NN_jmpfi,
+    ida_allins.NN_jmpni,
+    ida_allins.NN_jmpshort,
+    ida_allins.NN_ja,
+    ida_allins.NN_jz,
+    ida_allins.NN_jnz,
+    ida_allins.NN_jne,
+    ida_allins.NN_je,
+    ida_allins.NN_jg,
+    ida_allins.NN_jge,
+    ida_allins.NN_jl,
+    ida_allins.NN_jle,
+}
+LINEAR_RETURN_TYPES = {ida_allins.NN_retn}
+LINEAR_CONTROL_TYPES = LINEAR_JUMP_TYPES | CALL_TYPES | LINEAR_RETURN_TYPES
 REG_R8 = ida_idp.str2reg("r8w")
 REG_R10 = ida_idp.str2reg("r10d")
 REG_RSP = ida_idp.str2reg("rsp")
@@ -151,7 +169,7 @@ def find_prev_insn(ea, insn, step=10):
 
 def find_prev_ctrl(cea, up):
     while cea > up:
-        if idc.print_insn_mnem(cea) in CTRL_INS:
+        if is_control_insn(cea):
             return cea
         cea = idc.prev_head(cea)
     return up
@@ -159,10 +177,15 @@ def find_prev_ctrl(cea, up):
 
 def find_next_ctrl(cea, down):
     while cea < down:
-        if idc.print_insn_mnem(cea) in CTRL_INS:
+        if is_control_insn(cea):
             return cea
         cea = idc.next_head(cea)
     return down
+
+
+def is_control_insn(ea):
+    insn = ida_ua.insn_t()
+    return ida_ua.decode_insn(insn, ea) > 0 and insn.itype in LINEAR_CONTROL_TYPES
 
 class OperandLine(typing.NamedTuple):
     ea: int
@@ -175,6 +198,11 @@ class OperandLine(typing.NamedTuple):
 
     a = property(lambda self: (self.op1, self.val1))
     b = property(lambda self: (self.op2, self.val2))
+
+
+class StorageRef(typing.NamedTuple):
+    location: tuple[int, int, int, int]
+    text: str
 
 
 class EventPacketResolver:
@@ -800,6 +828,7 @@ class CallTable:
     def __init__(self, func_address) -> None:
         self.content = []
         self.call_fanc = ida_funcs.get_func(func_address)
+        self._visited = set()
         self.init_send_table(func_address)
         self.content.sort(key=lambda x: x["case"])
         print("Sorted CallTable")
@@ -807,6 +836,10 @@ class CallTable:
             print(f"Code 0x{i['case']:03x}: between@{i['start']:x} - {i['end']:x}")
 
     def init_send_table(self, ea):
+        if ea in self._visited:
+            return
+        self._visited.add(ea)
+
         call_ea = ea
         func = ida_funcs.get_func(ea)
         if not func:
@@ -814,40 +847,16 @@ class CallTable:
             for xref in xrefs:
                 self.init_send_table(xref)
             return
-        op_var = ""
-        # find lea rdx [opcode] between func.start-call
-        ea = call_ea
-        while ea > func.start_ea:
-            if (
-                idc.print_insn_mnem(ea) == "lea"
-                and idc.print_operand(ea, 0) == "rdx"
-                and idc.get_operand_type(ea, 1) == idaapi.o_displ
-            ):
-                op_var = idc.print_operand(ea, 1)
-                break
-            ea = idc.prev_head(ea)
-        if op_var != "":
-            # find mov [opcode] imm between func.start-call
-            ea = call_ea
-            while ea > func.start_ea:
-                if (
-                    idc.print_insn_mnem(ea) == "mov"
-                    and idc.print_operand(ea, 0) == op_var
-                    and idc.get_operand_type(ea, 1) == idaapi.o_imm
-                ):
 
-                    op = idc.print_operand(ea, 1)
-                    op = op.replace("h", "")
-                    if op == "":
-                        return
-                    op = int(op, 16)
-                    self.add_send_opcode(
-                        op,
-                        find_prev_ctrl(ea, func.start_ea),
-                        find_next_ctrl(ea, func.end_ea),
-                    )
-                    break
-                ea = idc.prev_head(ea)
+        opcode_storage = self._find_opcode_storage(call_ea, func.start_ea)
+        if opcode_storage is not None:
+            mov_ea, opcode = self._find_opcode_store(call_ea, func.start_ea, opcode_storage)
+            if mov_ea is not None:
+                self.add_send_opcode(
+                    opcode,
+                    find_prev_ctrl(mov_ea, func.start_ea),
+                    find_next_ctrl(mov_ea, func.end_ea),
+                )
             return
         else:
             for xref in idautils.XrefsTo(func.start_ea, 0):
@@ -855,13 +864,57 @@ class CallTable:
                     self.init_send_table(xref.frm)
             return
 
+    def _decode(self, ea):
+        insn = ida_ua.insn_t()
+        if ida_ua.decode_insn(insn, ea) <= 0:
+            return None
+        return insn
+
+    def _find_opcode_storage(self, call_ea, start_ea):
+        ea = call_ea
+        while ea > start_ea:
+            insn = self._decode(ea)
+            if insn:
+                op0 = insn.ops[0]
+                op1 = insn.ops[1]
+                if (
+                    insn.itype == ida_allins.NN_lea
+                    and op0.type == ida_ua.o_reg
+                    and op0.reg == REG_RDX
+                    and op1.type == ida_ua.o_displ
+                ):
+                    return StorageRef(self._operand_location(op1), idc.print_operand(ea, 1))
+            ea = idc.prev_head(ea)
+        return None
+
+    def _find_opcode_store(self, call_ea, start_ea, storage):
+        ea = call_ea
+        while ea > start_ea:
+            insn = self._decode(ea)
+            if insn:
+                op0 = insn.ops[0]
+                op1 = insn.ops[1]
+                if (
+                    insn.itype == ida_allins.NN_mov
+                    and self._operand_location(op0) == storage.location
+                    and idc.print_operand(ea, 0) == storage.text
+                    and op1.type == ida_ua.o_imm
+                ):
+                    return ea, op1.value
+            ea = idc.prev_head(ea)
+        return None, None
+
+    def _operand_location(self, op):
+        if op.type not in (ida_ua.o_displ, ida_ua.o_mem):
+            return None
+        return (op.type, op.reg, op.phrase, op.addr)
+
     def add_send_opcode(self, op, start, end):
         # print(f"Code 0x{op:03x}: between@{start:x} - {end:x}")
         self.content.append({"case": op, "start": start, "end": end})
 
     def index(self, ea):
-        maybe = [i["case"] for i in self.content if ea >= i["start"] and ea < i["end"]]
-        return list(set(maybe))
+        return sorted({i["case"] for i in self.content if ea >= i["start"] and ea < i["end"]})
 
 
 class ServerZoneIpcType:
