@@ -101,6 +101,7 @@ REG_R8 = ida_idp.str2reg("r8w")
 REG_R10 = ida_idp.str2reg("r10d")
 REG_RSP = ida_idp.str2reg("rsp")
 REG_EAX = ida_idp.str2reg("eax")
+REG_RDX = ida_idp.str2reg("rdx")
 
 
 def get_ctrl_target(ea):
@@ -163,31 +164,80 @@ def find_next_ctrl(cea, down):
         cea = idc.next_head(cea)
     return down
 
-# 感谢头子 :))))
-def find_event_packets(func_ea, sender):
-    class OperandLine(typing.NamedTuple):
-        ea: int
-        insn: str
-        op1: int
-        op2: int
-        val1: int
-        val2: int
+class OperandLine(typing.NamedTuple):
+    ea: int
+    insn: str
+    itype: int
+    op1: int
+    op2: int
+    val1: int
+    val2: int
 
-        a = property(lambda self: (self.op1, self.val1))
-        b = property(lambda self: (self.op2, self.val2))
+    a = property(lambda self: (self.op1, self.val1))
+    b = property(lambda self: (self.op2, self.val2))
 
-    get_op = lambda ea: OperandLine(
-        ea,
-        idc.print_insn_mnem(ea),
-        idc.get_operand_type(ea, 0),
-        idc.get_operand_type(ea, 1),
-        idc.get_operand_value(ea, 0),
-        idc.get_operand_value(ea, 1)
-    )
 
-    func = ida_funcs.get_func(func_ea)
+class EventPacketResolver:
+    def __init__(self, func_ea, sender):
+        self.func = ida_funcs.get_func(func_ea)
+        if not self.func:
+            raise ValueError(f"Could not find function at {func_ea:x}")
+        self.sender = sender
+        self._ops = {}
+        self.blocks = list(ida_gdl.FlowChart(self.func))
+        self.block_by_start = {block.start_ea: block for block in self.blocks}
+        self.addr_to_block = {}
+        for block in self.blocks:
+            ea = block.start_ea
+            while ea != idc.BADADDR and ea < block.end_ea:
+                self.addr_to_block[ea] = block
+                ea = idc.next_head(ea, block.end_ea)
 
-    def find_set(ea, o, v):
+    def resolve(self):
+        set_vals = self._sender_opcode_sets()
+        for ea, conds in self._find_cond(self.func.start_ea, set(set_vals)):
+            opcode = set_vals[ea]
+            min_val, max_val = self._range_from_conditions(ea, conds)
+            yield opcode, min_val, max_val, conds
+
+    def _op(self, ea):
+        if ea not in self._ops:
+            insn = ida_ua.insn_t()
+            if ida_ua.decode_insn(insn, ea) > 0:
+                mnem = insn.get_canon_mnem()
+                itype = insn.itype
+            else:
+                mnem = idc.print_insn_mnem(ea)
+                itype = -1
+            self._ops[ea] = OperandLine(
+                ea,
+                mnem,
+                itype,
+                idc.get_operand_type(ea, 0),
+                idc.get_operand_type(ea, 1),
+                idc.get_operand_value(ea, 0),
+                idc.get_operand_value(ea, 1),
+            )
+        return self._ops[ea]
+
+    def _sender_opcode_sets(self):
+        set_vals = {}
+        for call_ea in self._sender_calls():
+            for ea, opcode in self._find_set(call_ea, idaapi.o_reg, REG_RDX):
+                if ea in set_vals and set_vals[ea] != opcode:
+                    raise ValueError(f"Conflicting opcode values at {ea:x}: {set_vals[ea]:x} vs {opcode:x}")
+                set_vals[ea] = opcode
+        return set_vals
+
+    def _sender_calls(self):
+        for ea in idautils.FuncItems(self.func.start_ea):
+            insn = ida_ua.insn_t()
+            if ida_ua.decode_insn(insn, ea) <= 0:
+                continue
+            if insn.itype == ida_allins.NN_call and get_branch_target(ea) == self.sender:
+                yield ea
+
+    def _find_set(self, ea, operand_type, operand_value):
         analyzed = set()
         to_analyze = [ea]
 
@@ -197,125 +247,173 @@ def find_event_packets(func_ea, sender):
                 continue
             analyzed.add(cur)
 
-            op = get_op(cur)
-
-            if op.op1 == o and op.val1 == v:
-                if op.insn == "lea":
+            op = self._op(cur)
+            if op.op1 == operand_type and op.val1 == operand_value:
+                if op.itype == ida_allins.NN_lea:
                     if op.op2 == idaapi.o_displ:
-                        yield from find_set(cur, idaapi.o_displ, op.val2)
+                        yield from self._find_set(cur, idaapi.o_displ, op.val2)
                         continue
-                    else:
-                        raise ValueError(f"Unexpected instruction at {hex(cur)}")
-                elif op.insn == "mov":
+                    raise ValueError(f"Unexpected instruction at {hex(cur)}")
+                if op.itype == ida_allins.NN_mov:
                     if op.op2 == idaapi.o_imm:
                         yield cur, op.val2
                         continue
-                    else:
-                        raise ValueError(f"Unexpected instruction at {hex(cur)}")
+                    raise ValueError(f"Unexpected instruction at {hex(cur)}")
 
             for xref in idautils.XrefsTo(cur):
-                if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.frm) and xref.frm not in analyzed:
-                    if xref.frm not in to_analyze:
-                        to_analyze.append(xref.frm)
+                if self._is_backward_flow_xref(xref) and xref.frm not in analyzed and xref.frm not in to_analyze:
+                    to_analyze.append(xref.frm)
 
-    set_vals = {}
+    def _find_cond(self, start_ea, end_eas):
+        start_block = self.addr_to_block.get(start_ea)
+        if not start_block:
+            return
 
-    class CV(ctree_visitor_t):
-        def visit_expr(self, expr: cexpr_t) -> int:
-            if expr.op == cot_call and idc.get_operand_value(expr.ea, 0) == sender:
-                for ea, v in find_set(expr.ea, idaapi.o_reg, 2):
-                    assert ea not in set_vals
-                    set_vals[ea] = v
-            return 0
+        seen = set()
+        work = [(start_block.start_ea, [], None)]
 
-    cfunc = ida_hexrays.decompile(func.start_ea)
-    if cfunc is None:
-        raise ValueError(f"Failed to decompile function at {func.start_ea:x}")
-    CV(CV_FAST).apply_to(cfunc.body, None)
-
-    def find_cond(start_ea, end_eas):
-        analyzed = set()
-        to_analyze = [(start_ea, [], None)]
-
-        while to_analyze:
-            cur, conds, last_cond = to_analyze.pop()
-            if cur in analyzed:
+        while work:
+            block_start, conds, last_cond = work.pop()
+            state_key = (block_start, tuple(conds), last_cond.ea if last_cond else None)
+            if state_key in seen:
                 continue
-            analyzed.add(cur)
-            if cur in end_eas:
-                yield cur, conds
+            seen.add(state_key)
+
+            block = self.block_by_start.get(block_start)
+            if not block:
                 continue
-            op = get_op(cur)
-            xrefs = [xref for xref in idautils.XrefsFrom(cur) if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.to)]
-            if len(xrefs) == 2:
-                for xref in xrefs:
-                    if xref.to not in analyzed:
-                        to_analyze.append((xref.to, conds + [(cur, op.insn, last_cond, xref.type == ida_xref.fl_F)], last_cond))
-            elif len(xrefs) <= 1:
-                if op.insn in ("test", "cmp"): last_cond = op
-                to_analyze.extend((xref.to, conds, last_cond) for xref in xrefs if xref.to not in analyzed)
+
+            out_last_cond = last_cond
+            ea = block.start_ea
+            while ea != idc.BADADDR and ea < block.end_ea:
+                if ea in end_eas:
+                    yield ea, conds
+                    break
+
+                op = self._op(ea)
+                if op.itype in (ida_allins.NN_test, ida_allins.NN_cmp):
+                    out_last_cond = op
+                ea = idc.next_head(ea, block.end_ea)
             else:
-                raise ValueError(f"Unexpected number of xrefs at {hex(cur)}")
+                for succ_start, succ_conds, succ_last_cond in self._successor_cond_states(block, conds, out_last_cond):
+                    work.append((succ_start, succ_conds, succ_last_cond))
 
-    for ea, conds in find_cond(func.start_ea, set_vals):
-        v = set_vals[ea]
+    def _successor_cond_states(self, block, conds, last_cond):
+        last_ea = self._last_insn(block)
+        if last_ea == idc.BADADDR:
+            return []
+
+        op = self._op(last_ea)
+        if op.itype in RETURN_TYPES:
+            return []
+        if op.itype in JUMP_TYPES:
+            target = get_branch_target(last_ea)
+            return [(target, conds, last_cond)] if target in self.block_by_start else []
+
+        if op.itype in CONDITIONAL_JUMPS:
+            target = get_branch_target(last_ea)
+            fallthrough = self._fallthrough(last_ea, block)
+            out = []
+            if target in self.block_by_start:
+                out.append((target, conds + [(last_ea, op.itype, last_cond, False)], last_cond))
+            if fallthrough in self.block_by_start:
+                out.append((fallthrough, conds + [(last_ea, op.itype, last_cond, True)], last_cond))
+            return out
+
+        return [(succ.start_ea, conds, last_cond) for succ in block.succs() if succ.start_ea in self.block_by_start]
+
+    def _fallthrough(self, ea, block):
+        nxt = idc.next_head(ea, block.end_ea)
+        if nxt != idc.BADADDR and nxt < block.end_ea:
+            return nxt
+        branch_target = get_branch_target(ea)
+        for succ in block.succs():
+            if succ.start_ea != branch_target:
+                return succ.start_ea
+        return idc.BADADDR
+
+    def _last_insn(self, block):
+        ea = block.start_ea
+        last = idc.BADADDR
+        while ea != idc.BADADDR and ea < block.end_ea:
+            last = ea
+            ea = idc.next_head(ea, block.end_ea)
+        return last
+
+    def _range_from_conditions(self, ea, conds):
         if len(conds) == 0 or conds[-1][2] is None:
             raise ValueError(f"No condition found for event packet at {hex(ea)}")
         last_op = conds[-1][2]
         if last_op.op2 != idaapi.o_imm:
             raise ValueError(f"Last condition is not an immediate value at {hex(ea)}")
-        max_va = 255
+
+        max_val = 255
         min_val = 0
         for ea_, insn, op, is_def in reversed(conds):
-            if op.a != last_op.a: break
-            if op.op2 != idaapi.o_imm: continue  # no need to handle this case
-            if op.insn == "test":
-                raise ValueError(f"Should not have test instruction at {hex(ea_)}")
-                # if insn == "jnz":
-                #     desc = "!&" if is_def else "&"
-                # elif insn == "jz":
-                #     desc = "&" if is_def else "!&"
-                # else:
-                #     raise ValueError(f"Unexpected instruction at {hex(ea_)}")
-            elif op.insn == "cmp":
-                if insn == "jge":
-                    desc = "<" if is_def else ">="
-                elif insn == "jle":
-                    desc = ">" if is_def else "<="
-                elif insn == "jg":
-                    desc = "<=" if is_def else ">"
-                elif insn == "jl":
-                    desc = ">=" if is_def else "<"
-                elif insn == "ja":
-                    desc = "<=" if is_def else ">"
-                elif insn == "jae":
-                    desc = "<" if is_def else ">="
-                elif insn == "jb":
-                    desc = ">=" if is_def else "<"
-                elif insn == "jbe":
-                    desc = ">" if is_def else "<="
-                elif insn == "je":
-                    desc = "!=" if is_def else "=="
-                elif insn == "jne":
-                    desc = "==" if is_def else "!="
-                else:
-                    raise ValueError(f"Unexpected instruction at {hex(ea_)}")
-            else:
-                raise ValueError(f"Unexpected instruction at {hex(ea_)}")
+            if op.a != last_op.a:
+                break
+            if op.op2 != idaapi.o_imm:
+                continue
+            desc = self._condition_desc(ea_, insn, op, is_def)
             match desc:
                 case "<":
-                    max_va = min(max_va, op.val2 - 1)
+                    max_val = min(max_val, op.val2 - 1)
                 case ">":
                     min_val = max(min_val, op.val2 + 1)
                 case "<=":
-                    max_va = min(max_va, op.val2)
+                    max_val = min(max_val, op.val2)
                 case ">=":
                     min_val = max(min_val, op.val2)
                 case "==":
-                    max_va = min(max_va, op.val2)
+                    max_val = min(max_val, op.val2)
                     min_val = max(min_val, op.val2)
                     break
-        yield v, min_val, max_va, conds
+        return min_val, max_val
+
+    def _condition_desc(self, ea, branch_itype, op, is_def):
+        if op.itype == ida_allins.NN_test:
+            raise ValueError(f"Should not have test instruction at {hex(ea)}")
+        if op.itype != ida_allins.NN_cmp:
+            raise ValueError(f"Unexpected instruction at {hex(ea)}")
+
+        if branch_itype == ida_allins.NN_jge:
+            return "<" if is_def else ">="
+        if branch_itype == ida_allins.NN_jle:
+            return ">" if is_def else "<="
+        if branch_itype == ida_allins.NN_jg:
+            return "<=" if is_def else ">"
+        if branch_itype == ida_allins.NN_jl:
+            return ">=" if is_def else "<"
+        if branch_itype == ida_allins.NN_ja:
+            return "<=" if is_def else ">"
+        if branch_itype == ida_allins.NN_jae:
+            return "<" if is_def else ">="
+        if branch_itype == ida_allins.NN_jb:
+            return ">=" if is_def else "<"
+        if branch_itype == ida_allins.NN_jbe:
+            return ">" if is_def else "<="
+        if branch_itype == ida_allins.NN_je or branch_itype == ida_allins.NN_jz:
+            return "!=" if is_def else "=="
+        if branch_itype == ida_allins.NN_jne or branch_itype == ida_allins.NN_jnz:
+            return "==" if is_def else "!="
+        raise ValueError(f"Unexpected instruction at {hex(ea)}")
+
+    def _is_forward_flow_xref(self, xref):
+        return (
+            xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F)
+            and self.func.contains(xref.to)
+        )
+
+    def _is_backward_flow_xref(self, xref):
+        return (
+            xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F)
+            and self.func.contains(xref.frm)
+        )
+
+
+# 感谢头子 :))))
+def find_event_packets(func_ea, sender):
+    yield from EventPacketResolver(func_ea, sender).resolve()
 
 
 #'ZoneClientIpc'
@@ -974,7 +1072,11 @@ class ClientZoneIpcType:
             return False
 
         try:
-            for opcode, min_val, max_val, conds in self.event_funcs[func]:
+            candidates = sorted(
+                self.event_funcs[func],
+                key=lambda item: (item[2] - item[1], item[1], item[2], item[0]),
+            )
+            for opcode, min_val, max_val, conds in candidates:
                 if min_val <= param <= max_val:
                     self.content[name] = opcode
                     print(f'Opcode 0x{opcode:03x}({opcode:03d}): {name} (range: {min_val}-{max_val})')
