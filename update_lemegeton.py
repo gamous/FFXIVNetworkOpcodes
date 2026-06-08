@@ -44,7 +44,7 @@ ALL_data=f"""<?xml version="1.0" encoding="utf-8"?>
 	</Regions>
 </Blueprint>
 """
-lemegeton_path = os.path.join(OutputPath,"lemegeton.xml")
+lemegeton_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "lemegeton.xml")
 with open(lemegeton_path, "w+") as f:
     f.write(ALL_data)
 print('lemegeton.xml updated')
