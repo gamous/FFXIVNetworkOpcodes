@@ -548,6 +548,10 @@
             {
                 "name":"UpdatePositionInstance",
                 "opcode":705
+            },
+            {
+                "name":"Heartbeat",
+                "opcode":942
             }
         ]
     }

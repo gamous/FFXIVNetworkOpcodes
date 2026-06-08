@@ -1,0 +1,20 @@
+		<Region Name="CN" Version="2024.05.17.0000.0000">
+			<Opcodes>
+				<Opcode Name="StatusEffectList" Id="281" />
+				<Opcode Name="StatusEffectList2" Id="319" />
+				<Opcode Name="StatusEffectList3" Id="153" />
+				<Opcode Name="Ability1" Id="357" />
+				<Opcode Name="Ability8" Id="367" />
+				<Opcode Name="Ability16" Id="660" />
+				<Opcode Name="Ability24" Id="613" />
+				<Opcode Name="Ability32" Id="581" />
+				<Opcode Name="ActorCast" Id="878" />
+				<Opcode Name="EffectResult" Id="635" />
+				<Opcode Name="ActorControl" Id="194" />
+				<Opcode Name="ActorControlSelf" Id="615" />
+				<Opcode Name="ActorControlTarget" Id="530" />
+				<Opcode Name="MapEffect" Id="301" />
+				<Opcode Name="EventPlay" Id="225" />
+				<Opcode Name="EventPlay64" Id="671" />
+			</Opcodes>
+		</Region>
