@@ -153,6 +153,7 @@ namespace FFXIVOpcodes.CN
         SetSearchInfoHandler = 0x01C8,
         UpdatePositionHandler = 0x0245,
         UpdatePositionInstance = 0x02C1,
+        Heartbeat = 0x03AE,
     };
     
     public enum ServerChatIpcType : ushort
