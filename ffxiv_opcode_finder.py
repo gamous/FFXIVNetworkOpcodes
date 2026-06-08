@@ -8,11 +8,15 @@ import ida_search
 import ida_ua
 import ida_hexrays
 import ida_funcs
+import ida_gdl
+import ida_idp
+import ida_allins
 import os
 import json
 import functools
 import re
 import typing
+import copy
 from ida_hexrays import *
 
 ConfigPath = os.path.dirname(os.path.realpath(__file__))
@@ -73,21 +77,55 @@ JMP_INS = ["jmp", "ja", "jz", "jnz", "je", "jne", "jg", "jge", "jl", "jle"]
 CALL_INS = ["call"]
 RET_INS = ["ret", "retn"]
 CTRL_INS = JMP_INS + CALL_INS + RET_INS
+EQ_TRUE_JUMPS = {"jz", "je"}
+EQ_FALSE_JUMPS = {"jnz", "jne"}
+CONDITIONAL_JUMPS = {
+    ida_allins.NN_ja,
+    ida_allins.NN_jae,
+    ida_allins.NN_jb,
+    ida_allins.NN_jbe,
+    ida_allins.NN_jg,
+    ida_allins.NN_jge,
+    ida_allins.NN_jl,
+    ida_allins.NN_jle,
+    ida_allins.NN_jz,
+    ida_allins.NN_jnz,
+    ida_allins.NN_jne,
+    ida_allins.NN_je,
+}
+EQ_TRUE_JUMP_TYPES = {ida_allins.NN_jz, ida_allins.NN_je}
+EQ_FALSE_JUMP_TYPES = {ida_allins.NN_jnz, ida_allins.NN_jne}
+RETURN_TYPES = {ida_allins.NN_retn, ida_allins.NN_retf}
+JUMP_TYPES = {ida_allins.NN_jmp, ida_allins.NN_jmpfi, ida_allins.NN_jmpni, ida_allins.NN_jmpshort}
+REG_R8 = ida_idp.str2reg("r8w")
+REG_R10 = ida_idp.str2reg("r10d")
+REG_RSP = ida_idp.str2reg("rsp")
+REG_EAX = ida_idp.str2reg("eax")
 
 
 def get_ctrl_target(ea):
-    xrefs = list(idautils.XrefsFrom(ea, flags=1))
+    xrefs = [xref for xref in idautils.XrefsFrom(ea, flags=1) if xref.iscode]
     return xrefs[0].to if len(xrefs) > 0 else idc.BADADDR
 
 
-def find_pattern(pattern, times=1):
+def get_branch_target(ea):
+    target = idc.get_operand_value(ea, 0)
+    return target if target != idc.BADADDR else get_ctrl_target(ea)
+
+
+@functools.cache
+def _find_pattern_cached(pattern, times):
     address = min_text_ea
-    while times>0:
+    while times > 0:
         address = ida_bytes.find_bytes(pattern, range_start=idc.next_head(address), range_end=max_text_ea)
-        times-=1
+        times -= 1
         if address == idc.BADADDR:
             return idc.BADADDR
     return address
+
+
+def find_pattern(pattern, times=1):
+    return _find_pattern_cached(pattern, times)
 
 
 def find_next_insn(ea, insn, step=30):
@@ -154,7 +192,10 @@ def find_event_packets(func_ea, sender):
         to_analyze = [ea]
 
         while to_analyze:
-            analyzed.add(cur := to_analyze.pop())
+            cur = to_analyze.pop()
+            if cur in analyzed:
+                continue
+            analyzed.add(cur)
 
             op = get_op(cur)
 
@@ -174,7 +215,8 @@ def find_event_packets(func_ea, sender):
 
             for xref in idautils.XrefsTo(cur):
                 if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.frm) and xref.frm not in analyzed:
-                    to_analyze.append(xref.frm)
+                    if xref.frm not in to_analyze:
+                        to_analyze.append(xref.frm)
 
     set_vals = {}
 
@@ -186,7 +228,10 @@ def find_event_packets(func_ea, sender):
                     set_vals[ea] = v
             return 0
 
-    CV(CV_FAST).apply_to(ida_hexrays.decompile(func.start_ea).body, None)
+    cfunc = ida_hexrays.decompile(func.start_ea)
+    if cfunc is None:
+        raise ValueError(f"Failed to decompile function at {func.start_ea:x}")
+    CV(CV_FAST).apply_to(cfunc.body, None)
 
     def find_cond(start_ea, end_eas):
         analyzed = set()
@@ -194,6 +239,8 @@ def find_event_packets(func_ea, sender):
 
         while to_analyze:
             cur, conds, last_cond = to_analyze.pop()
+            if cur in analyzed:
+                continue
             analyzed.add(cur)
             if cur in end_eas:
                 yield cur, conds
@@ -202,7 +249,8 @@ def find_event_packets(func_ea, sender):
             xrefs = [xref for xref in idautils.XrefsFrom(cur) if xref.type in (ida_xref.fl_JN, ida_xref.fl_JF, ida_xref.fl_F) and func.contains(xref.to)]
             if len(xrefs) == 2:
                 for xref in xrefs:
-                    to_analyze.append((xref.to, conds + [(cur, op.insn, last_cond, xref.type == ida_xref.fl_F)], last_cond))
+                    if xref.to not in analyzed:
+                        to_analyze.append((xref.to, conds + [(cur, op.insn, last_cond, xref.type == ida_xref.fl_F)], last_cond))
             elif len(xrefs) <= 1:
                 if op.insn in ("test", "cmp"): last_cond = op
                 to_analyze.extend((xref.to, conds, last_cond) for xref in xrefs if xref.to not in analyzed)
@@ -211,6 +259,8 @@ def find_event_packets(func_ea, sender):
 
     for ea, conds in find_cond(func.start_ea, set_vals):
         v = set_vals[ea]
+        if len(conds) == 0 or conds[-1][2] is None:
+            raise ValueError(f"No condition found for event packet at {hex(ea)}")
         last_op = conds[-1][2]
         if last_op.op2 != idaapi.o_imm:
             raise ValueError(f"Last condition is not an immediate value at {hex(ea)}")
@@ -281,62 +331,111 @@ class SwitchTable:
     def __init__(self, ea) -> None:
         self.content = []
         self.switch_func = ida_funcs.get_func(ea)
+        if not self.switch_func:
+            raise ValueError(f"Could not find function at {ea:x}")
 
-        # 查找函数中所有可能的跳转指令
-        potential_switches = []
-        current_addr = self.switch_func.start_ea
-        while current_addr < self.switch_func.end_ea:
-            if idc.print_insn_mnem(current_addr).lower() == "jmp":
-                switch_info = ida_nalt.get_switch_info(current_addr)
-                if switch_info and switch_info.ncases > 0:
-                    potential_switches.append((current_addr, switch_info))
-            current_addr = idc.next_head(current_addr, self.switch_func.end_ea)
-
-        # 如果没有找到任何跳转表, 尝试直接在给定地址处查找
-        if not potential_switches:
-            self.switch_address = find_next_insn(ea, "jmp")
-            switch_info = ida_nalt.get_switch_info(self.switch_address)
-            if switch_info and switch_info.ncases > 0:
-                potential_switches.append((self.switch_address, switch_info))
-
-        # 如果仍然没有找到跳转表, 则退出
+        potential_switches = self._find_switches()
         if not potential_switches:
             print(f"No valid switch table found for function at {ea:x}")
             return
 
-        # 选择元素数量最多的跳转表
-        self.switch_address, switch_info = max(potential_switches, key=lambda x: x[1].ncases)
+        self.switch_address, switch_info, results = max(
+            potential_switches,
+            key=lambda item: item[1].ncases,
+        )
 
         print(f"Selected switch table at {self.switch_address:x} with {switch_info.ncases} cases")
         print(switch_info)
         print(f"Number of cases: {switch_info.ncases}")
         print(f"Jumps address: {switch_info.jumps:x}")
 
-        # Use calc_switch_cases to correctly handle compressed jump tables
-        results = ida_xref.calc_switch_cases(self.switch_address, switch_info)
+        target_to_cases = self._target_to_cases(results)
+        case_targets = set(target_to_cases)
+        self.blocks = list(ida_gdl.FlowChart(self.switch_func))
 
-        # Build a map from target address to case values
+        for target, case_list in target_to_cases.items():
+            ranges = self._handler_ranges(target, case_targets)
+            for case_val in case_list:
+                for start, end in ranges:
+                    print(f"case 0x{case_val:03x}: block@{start:x} - {end:x}")
+                    self.content.append({"case": case_val, "start": start, "end": end})
+        return
+
+    def _find_switches(self):
+        candidates = []
+        ea = self.switch_func.start_ea
+        while ea != idc.BADADDR and ea < self.switch_func.end_ea:
+            switch_info = ida_nalt.get_switch_info(ea)
+            if switch_info and switch_info.ncases > 0:
+                try:
+                    results = ida_xref.calc_switch_cases(ea, switch_info)
+                except Exception as exc:
+                    print(f"Failed to calculate switch cases at {ea:x}: {exc}")
+                else:
+                    if results and len(results.cases) > 0:
+                        candidates.append((ea, switch_info, results))
+            ea = idc.next_head(ea, self.switch_func.end_ea)
+        return candidates
+
+    def _target_to_cases(self, results):
         target_to_cases = {}
         for idx in range(len(results.cases)):
             target = results.targets[idx]
+            case_values = target_to_cases.setdefault(target, [])
             cases = results.cases[idx]
-            if target not in target_to_cases:
-                target_to_cases[target] = []
-            for case_val in cases:
-                target_to_cases[target].append(case_val)
+            for case_idx in range(len(cases)):
+                case_values.append(cases[case_idx])
+        return target_to_cases
 
-        # Process each unique target
-        for target, case_list in target_to_cases.items():
-            startea = target
-            endea = min(
-                find_next_insn(startea, "jmp", 1000),
-                find_next_insn(startea, "retn", 1000),
-            )
-            # Add an entry for each case value
-            for case_val in case_list:
-                print(f"case 0x{case_val:03x}: jmp@{startea:x} - {endea:x}")
-                self.content.append({"case": case_val, "start": startea, "end": endea})
-        return
+    def _block_for_ea(self, ea):
+        for block in self.blocks:
+            if block.start_ea <= ea < block.end_ea:
+                return block
+        return None
+
+    def _handler_ranges(self, target, case_targets):
+        start_block = self._block_for_ea(target)
+        if not start_block:
+            return [(target, idc.next_head(target, self.switch_func.end_ea))]
+
+        ranges = []
+        work = [start_block]
+        seen = set()
+        while work:
+            block = work.pop()
+            if block.start_ea in seen:
+                continue
+            seen.add(block.start_ea)
+            ranges.append((max(target, block.start_ea), block.end_ea))
+
+            if self._ends_with_terminal_jump(block):
+                continue
+
+            for succ in block.succs():
+                if not self.switch_func.contains(succ.start_ea):
+                    continue
+                if succ.start_ea in case_targets and succ.start_ea != start_block.start_ea:
+                    continue
+                work.append(succ)
+
+        return sorted(ranges)
+
+    def _ends_with_terminal_jump(self, block):
+        last = self._last_insn(block)
+        if last == idc.BADADDR:
+            return True
+        insn = ida_ua.insn_t()
+        if ida_ua.decode_insn(insn, last) <= 0:
+            return True
+        return insn.itype in RETURN_TYPES or insn.itype in JUMP_TYPES
+
+    def _last_insn(self, block):
+        ea = block.start_ea
+        last = idc.BADADDR
+        while ea != idc.BADADDR and ea < block.end_ea:
+            last = ea
+            ea = idc.next_head(ea, block.end_ea)
+        return last
 
     def in_switch(self, ea) -> bool:
         return (
@@ -346,345 +445,258 @@ class SwitchTable:
         )
 
     def index(self, ea) -> list:
-        maybe = []
+        maybe = set()
         if self.in_switch(ea):
-            maybe = [
-                case["case"]
-                for case in self.content
-                if (ea >= case["start"] and ea <= case["end"])
-            ]
-        return maybe
+            for case in self.content:
+                if case["start"] <= ea < case["end"]:
+                    maybe.add(case["case"])
+        return sorted(maybe)
 
 
-class SimpleSwitch:
+class CaseExpr(typing.NamedTuple):
+    base_reg: int
+    addend: int = 0
+
+    def sub(self, value):
+        return CaseExpr(self.base_reg, self.addend - value)
+
+    def equals(self, value):
+        if self.base_reg != REG_R8:
+            return None
+        return (value - self.addend) & 0xFFFF
+
+
+class DisasmSwitchResolver:
     def __init__(self, switch_address):
         self.content = []
         self.switch_func = ida_funcs.get_func(switch_address)
         if not self.switch_func:
             print(f"Error: Could not find function at 0x{switch_address:x}")
             return
-        
-        self.switch_func_item = list(idautils.FuncItems(self.switch_func.start_ea))
 
-        if self._is_old_sub_chain_pattern():
-            print("Detected old 'sub-chain' pattern. Using legacy parser.")
-            self.process_case_block(self.switch_func.start_ea, 0, 0, False, '')
-        else:
-            print("Detected new 'cmp-jmp' pattern. Using modern parser.")
-            self._process_new_cmp_jmp_pattern()
-        
-        print("--- Extraction Complete ---")
+        self.blocks = list(ida_gdl.FlowChart(self.switch_func))
+        self.block_by_start = {block.start_ea: block for block in self.blocks}
+        self.addr_to_block = {}
+        for block in self.blocks:
+            ea = block.start_ea
+            while ea != idc.BADADDR and ea < block.end_ea:
+                self.addr_to_block[ea] = block
+                ea = idc.next_head(ea, block.end_ea)
+
+        self._resolve()
         if not self.content:
-            print("Warning: No case-arg pairs were extracted. The code pattern might have changed again.")
-            raise ValueError("SimpleSwitch failed to extract any case-arg pairs")
-        else:
-            final_content = []
-            seen_args = set()
-            for item in sorted(self.content, key=lambda x: x['case']):
-                if item['arg'] not in seen_args:
-                    final_content.append(item)
-                    seen_args.add(item['arg'])
+            raise ValueError("DisasmSwitchResolver failed to extract any case-arg pairs")
 
-            self.content = final_content
-            for item in self.content:
-                print(f"Case: 0x{item['case']:04X} -> Arg: {item['arg']} (0x{item['arg']:X})")
-            print(f"Total items found: {len(self.content)}")
-
-    def _is_old_sub_chain_pattern(self):
-        for ea in self.switch_func_item:
-            if idc.print_insn_mnem(ea) == "sub" and "r10d" in idc.print_operand(ea, 0):
-                 return True
-        return False
-
-    # Old 'sub-chain' pattern
-    def process_case_block(self, start, rcase, ccase, iscmp, reg):
-        _reg = reg
-        _reg_case = rcase
-        _t_mov_op1 = 0
-        _t_cmp_tmp = ccase
-        _t_cmp_yes = iscmp
-        for ea in self.switch_func_item:
-            if ea < start: continue
-            if not self.switch_func.contains(ea): continue
-            ins = idc.print_insn_mnem(ea)
-            op0 = idc.print_operand(ea, 0)
-            op1 = idc.print_operand(ea, 1)
-            if ins in JMP_INS:
-                target_ea = get_ctrl_target(ea)
-                if target_ea > ea: self.process_case_block(target_ea, _reg_case, _t_cmp_tmp, _t_cmp_yes, _reg)
-                continue
-            if ins in RET_INS: continue
-            if ins == "mov":
-                if idc.get_operand_type(ea, 1) == idaapi.o_imm: _t_mov_op1 = idc.get_operand_value(ea, 1)
-                continue
-            if ins == "movzx" and op1 == 'r8w':
-                _reg = op0
-                continue
-            if ins == "call":
-                _case = _t_cmp_tmp if _t_cmp_yes else _reg_case
-                if self.index(_t_mov_op1) or _t_mov_op1 == 0: continue
-                self.content.append({"case": _case, "arg": _t_mov_op1})
-                continue
-            if ins == "cmp" and op0 == _reg:
-                if idc.get_operand_type(ea, 1) == idaapi.o_imm:
-                    val = idc.get_operand_value(ea, 1)
-                    if idc.print_insn_mnem(idc.next_head(ea)) == 'jnz':
-                        _reg_case += val
-                        _t_cmp_yes = False
-                    else:
-                        _t_cmp_tmp = val
-                        _t_cmp_yes = True
-                continue
-            if ins == "sub" and op0 == _reg:
-                if idc.get_operand_type(ea, 1) == idaapi.o_imm:
-                    _reg_case += idc.get_operand_value(ea, 1)
-                    _t_cmp_yes = False
-                continue
-
-    # New 'cmp-jmp' pattern
-    def _process_new_cmp_jmp_pattern(self):
-        processed_handlers = set()
-
-        for ea in self.switch_func_item:
-            if not (idc.print_insn_mnem(ea) == "cmp" and idc.print_operand(ea, 0) == 'r8w'):
-                continue
-
-            case_val = None
-            if idc.get_operand_type(ea, 1) == idaapi.o_imm:
-                case_val = idc.get_operand_value(ea, 1)
-            else:
-                case_val = self._find_case_for_cmp(ea)
-
-            if case_val is None:
-                continue
-
-            current_ea = ea
-            for _ in range(5): 
-                current_ea = idc.next_head(current_ea)
-                if not current_ea or not self.switch_func.contains(current_ea):
-                    break
-
-                mnem = idc.print_insn_mnem(current_ea)
-
-                if mnem in ["jz", "je"]:
-                    target_ea = get_ctrl_target(current_ea)
-                    if target_ea not in processed_handlers:
-                        arg_val = self._find_arg_in_block(target_ea)
-                        if arg_val is not None:
-                            self.content.append({"case": case_val, "arg": arg_val})
-                            processed_handlers.add(target_ea)
-                
-                elif mnem in ["jnz", "jne"]:
-                    fallthrough_ea = idc.next_head(current_ea)
-                    if fallthrough_ea not in processed_handlers:
-                        arg_val = self._find_arg_in_block(fallthrough_ea)
-                        if arg_val is not None:
-                            self.content.append({"case": case_val, "arg": arg_val})
-                            processed_handlers.add(fallthrough_ea)
-                
-                elif not mnem.startswith('j'):
-                    if current_ea not in processed_handlers:
-                        arg_val = self._find_arg_in_block(current_ea)
-                        if arg_val is not None:
-                            self.content.append({"case": case_val, "arg": arg_val})
-                            processed_handlers.add(current_ea)
-                    break
-
-    def _find_case_for_cmp(self, cmp_ea):
-        if idc.get_operand_type(cmp_ea, 1) != idaapi.o_reg: return None
-        cmp_op1_reg = idc.print_operand(cmp_ea, 1)
-        prev_ea = cmp_ea
-        for _ in range(5):
-            prev_ea = idc.prev_head(prev_ea)
-            if not prev_ea or prev_ea < self.switch_func.start_ea: break
-            mov_op0_reg = idc.print_operand(prev_ea, 0)
-            if idc.print_insn_mnem(prev_ea) == "mov" and cmp_op1_reg in mov_op0_reg:
-                if idc.get_operand_type(prev_ea, 1) == idaapi.o_imm:
-                    return idc.get_operand_value(prev_ea, 1)
-        return None
-
-    def _find_arg_in_block(self, block_start_ea):
-        current_ea = block_start_ea
-        for _ in range(15):
-            if not self.switch_func.contains(current_ea): break
-            insn_mnem = idc.print_insn_mnem(current_ea)
-            if insn_mnem == "mov" and idc.get_operand_type(current_ea, 0) == idaapi.o_displ:
-                if idc.get_operand_type(current_ea, 1) == idaapi.o_imm:
-                    return idc.get_operand_value(current_ea, 1)
-            if insn_mnem.startswith('j') or insn_mnem.startswith('ret'):
-                break
-            current_ea = idc.next_head(current_ea)
-        return None
+        final_content = []
+        seen_args = set()
+        for item in sorted(self.content, key=lambda x: x["case"]):
+            if item["arg"] not in seen_args:
+                final_content.append(item)
+                seen_args.add(item["arg"])
+        self.content = final_content
 
     def index(self, arg):
         for item in self.content:
             if item["arg"] == arg:
                 return item["case"]
         return None
-    
-class SimpleSwitch2:
-    def __init__(self, switch_address) -> None:
-        self.content = []
-        self.switch_func = ida_funcs.get_func(switch_address)
-        self.switch_func_item = list(idautils.FuncItems(switch_address))
-        self.process_case_block(self.switch_func.start_ea)
-        print(self.content)
-        if (self.content == []):
-            raise ValueError("SimpleSwitch2 failed to extract any case-arg pairs")
 
-    def process_case_block(self, start):
-        _current_case = None
-        _jump_targets = {}
+    def _resolve(self):
+        initial_state = {"regs": {}, "case": None}
+        work = [(self.switch_func.start_ea, initial_state)]
+        seen = set()
+        found = []
 
-        for ea in self.switch_func_item:
-            if ea < start:
+        while work:
+            block_start, state = work.pop()
+            block = self.block_by_start.get(block_start)
+            if not block:
                 continue
-            ins = idc.print_insn_mnem(ea)
-            op0 = idc.print_operand(ea, 0)
-            op1 = idc.print_operand(ea, 1)
-
-            if ins == "cmp" and op0 == "r8w":
-                if op1.endswith('h'):
-                    case_val = int(op1.strip('h'), 16)
-                elif op1 == "ax":
-                    prev_ea = idc.prev_head(ea)
-                    prev_ins = idc.print_insn_mnem(prev_ea)
-                    prev_op0 = idc.print_operand(prev_ea, 0)
-                    prev_op1 = idc.print_operand(prev_ea, 1)
-                    if prev_ins == "mov" and prev_op0 == "eax" and prev_op1.endswith('h'):
-                        case_val = int(prev_op1.strip('h'), 16)
-                    else:
-                        continue
-                else:
-                    try:
-                        case_val = int(op1, 16) if op1.isdigit() else None
-                    except:
-                        continue
-                    
-                if case_val is not None:
-                    next_ea = idc.next_head(ea)
-                    next_ins = idc.print_insn_mnem(next_ea)
-                    if next_ins in ["jz", "je"]:
-                        target = idc.get_operand_value(next_ea, 0)
-                        _jump_targets[target] = case_val
-                    elif next_ins in ["jnz", "jne"]:
-                        _current_case = case_val
-                        
-        for target_ea, case_val in _jump_targets.items():
-            self.process_target(target_ea, case_val)
-            
-        if _current_case is not None:
-            for ea in self.switch_func_item:
-                ins = idc.print_insn_mnem(ea)
-                op0 = idc.print_operand(ea, 0)
-                op1 = idc.print_operand(ea, 1)
-                
-                if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
-                    arg_val = int(op1.strip('h'), 16)
-                    if self.index(arg_val) is None:
-                        self.content.append({"case": _current_case, "arg": arg_val})
-                        print(f"case:0x{_current_case:03x} arg@{arg_val:x}")
-                    break
-
-    def process_target(self, target_ea, case_val):
-        for ea in self.switch_func_item:
-            if ea < target_ea:
+            key = (block_start, self._state_key(state))
+            if key in seen:
                 continue
-                
-            ins = idc.print_insn_mnem(ea)
-            op0 = idc.print_operand(ea, 0)
-            op1 = idc.print_operand(ea, 1)
-            
-            if ins == "mov" and op0.startswith("[rsp") and op1.endswith('h'):
-                arg_val = int(op1.strip('h'), 16)
-                if self.index(arg_val) is None:
-                    self.content.append({"case": case_val, "arg": arg_val})
-                    print(f"case:0x{case_val:03x} arg@{arg_val:x}")
-                break
-                
-            if ins == "retn" or (ins == "jmp" and ea != target_ea):
-                break
+            seen.add(key)
 
-    def index(self, arg):
-        for case in self.content:
-            if case["arg"] == arg:
-                return case["case"]
+            out_state, sink = self._process_block(block, state)
+            if sink is not None:
+                found.append(sink)
+
+            for succ_start, succ_state in self._successor_states(block, out_state):
+                if succ_start in self.block_by_start:
+                    work.append((succ_start, succ_state))
+
+        self.content = self._dedupe(found)
+
+    def _state_key(self, state):
+        regs = tuple(sorted(state["regs"].items()))
+        return (regs, state.get("case"), state.get("_last_cmp_case"))
+
+    def _copy_state(self, state):
+        copied = {"regs": dict(state["regs"]), "case": state.get("case")}
+        if "_last_cmp_case" in state:
+            copied["_last_cmp_case"] = state["_last_cmp_case"]
+        return copied
+
+    def _dedupe(self, items):
+        result = []
+        seen = set()
+        for item in sorted(items, key=lambda x: (x["case"], x["arg"])):
+            key = (item["case"], item["arg"])
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append({"case": item["case"], "arg": item["arg"]})
+        return result
+
+    def _decode(self, ea):
+        insn = ida_ua.insn_t()
+        if ida_ua.decode_insn(insn, ea) <= 0:
+            return None
+        return insn
+
+    def _fallthrough(self, ea, block):
+        nxt = idc.next_head(ea, block.end_ea)
+        if nxt != idc.BADADDR and nxt < block.end_ea:
+            return nxt
+        for succ in block.succs():
+            if succ.start_ea != get_branch_target(ea):
+                return succ.start_ea
+        return idc.BADADDR
+
+    def _last_insn(self, block):
+        ea = block.start_ea
+        last = idc.BADADDR
+        while ea != idc.BADADDR and ea < block.end_ea:
+            last = ea
+            ea = idc.next_head(ea, block.end_ea)
+        return last
+
+    def _expr_from_operand(self, ea, op_idx, state):
+        insn = self._decode(ea)
+        if not insn:
+            return None
+        op = insn.ops[op_idx]
+        if op.type == ida_ua.o_imm:
+            return op.value
+        if op.type == ida_ua.o_reg:
+            return state["regs"].get(self._norm_reg(op.reg))
         return None
 
-def map_switch_jumps(_si: int):
-    si = ida_nalt.switch_info_t()
-    res = {}
-    if ida_nalt.get_switch_info(si, _si):
-        results = ida_xref.calc_switch_cases(_si, si)
-        for idx in range(len(results.cases)):
-            s = res.setdefault(results.targets[idx], set())
-            for _idx in range(len(cases := results.cases[idx])):
-                s.add(cases[_idx])
-    return res
+    def _norm_reg(self, reg):
+        if reg == REG_R8:
+            return "r8"
+        if reg == REG_R10:
+            return "r10"
+        if reg == REG_EAX:
+            return "eax"
+        return reg
 
-class SwitchTableX:
-    def __init__(self, ea) -> None:
-        self.content = []
-        self.switch_func = ida_funcs.get_func(ea)
-        self.switch_address = find_next_insn(ea, "jmp")
-        print(f"switch table at {self.switch_address:x} <- {ea:x}")
-        switch_info = ida_nalt.get_switch_info(self.switch_address)
-
-        if not switch_info:
-            print(f"Error: No switch info found at {self.switch_address:x}")
-            return
-
-        print(f"ncases: {switch_info.ncases}")
-        print(f"jumps: {switch_info.jumps:x}")
-
-        # Use calc_switch_cases to correctly handle compressed jump tables
-        results = ida_xref.calc_switch_cases(self.switch_address, switch_info)
-
-        # Build a map from target address to case values
-        target_to_cases = {}
-        for idx in range(len(results.cases)):
-            target = results.targets[idx]
-            cases = results.cases[idx]
-            if target not in target_to_cases:
-                target_to_cases[target] = []
-            for case_val in cases:
-                target_to_cases[target].append(case_val)
-
-        # Process each unique target
-        for target, case_list in target_to_cases.items():
-            startea = target
-            endea = min(
-                find_next_insn(startea, "jmp", 1000),
-                find_next_insn(startea, "retn", 1000),
-            )
-
-            # Find mov instruction with immediate value
-            arg_val = None
-            movea = startea
-            for _ in range(10):
-                if idc.print_insn_mnem(movea) == "mov":
-                    op0 = idc.print_operand(movea, 0)
-                    # Look for mov [rsp+xx], imm
-                    if "[rsp" in op0 and idc.get_operand_type(movea, 1) == idaapi.o_imm:
-                        arg_val = idc.get_operand_value(movea, 1)
-                        break
-                if idc.print_insn_mnem(movea) in ["retn", "jmp"]:
-                    break
-                movea = idc.next_head(movea)
-
-            if arg_val is None:
-                arg_val = 0xffff
-
-            # Add an entry for each case value
-            for caseid in case_list:
-                print(f"case:0x{caseid:x} arg:0x{arg_val:x}")
-                self.content.append({"case": caseid, "arg": arg_val})
-
-    def index(self, arg):
-        for case in self.content:
-            if case["arg"] == arg:
-                return case["case"]
+    def _compute_eq_case(self, ea, state):
+        left = self._expr_from_operand(ea, 0, state)
+        right = self._expr_from_operand(ea, 1, state)
+        if isinstance(left, CaseExpr) and isinstance(right, int):
+            return left.equals(right)
+        if isinstance(right, CaseExpr) and isinstance(left, int):
+            return right.equals(left)
         return None
+
+    def _process_block(self, block, state):
+        state = self._copy_state(state)
+        last_cmp_case = None
+        pending_arg = None
+        ea = block.start_ea
+
+        while ea != idc.BADADDR and ea < block.end_ea:
+            decoded = self._decode(ea)
+            if not decoded:
+                ea = idc.next_head(ea, block.end_ea)
+                continue
+            op0 = decoded.ops[0]
+            op1 = decoded.ops[1]
+            norm_op0 = self._norm_reg(op0.reg) if op0.type == ida_ua.o_reg else None
+
+            if self._is_reg_reg(decoded, ida_allins.NN_movzx, REG_R8):
+                state["regs"][norm_op0] = CaseExpr(REG_R8, 0)
+            elif decoded.itype == ida_allins.NN_sub and norm_op0 in state["regs"] and op1.type == ida_ua.o_imm:
+                expr = state["regs"][norm_op0]
+                if isinstance(expr, CaseExpr):
+                    state["regs"][norm_op0] = expr.sub(op1.value)
+                    last_cmp_case = state["regs"][norm_op0].equals(0)
+                    if last_cmp_case is not None:
+                        state["_last_cmp_case"] = last_cmp_case
+            elif decoded.itype == ida_allins.NN_mov and op0.type == ida_ua.o_reg:
+                if op1.type == ida_ua.o_imm:
+                    state["regs"][norm_op0] = op1.value
+                elif op1.type == ida_ua.o_reg:
+                    src = self._norm_reg(op1.reg)
+                    state["regs"][norm_op0] = state["regs"].get(src)
+            elif decoded.itype == ida_allins.NN_cmp:
+                last_cmp_case = self._compute_eq_case(ea, state)
+                if last_cmp_case is not None:
+                    state["_last_cmp_case"] = last_cmp_case
+            elif decoded.itype == ida_allins.NN_mov and op0.type == ida_ua.o_displ:
+                if op0.phrase == REG_RSP and op1.type == ida_ua.o_imm:
+                    pending_arg = op1.value
+            elif decoded.itype == ida_allins.NN_call:
+                if pending_arg not in (None, 0) and state.get("case") is not None:
+                    return state, {"case": state["case"], "arg": pending_arg}
+
+            ea = idc.next_head(ea, block.end_ea)
+
+        return state, None
+
+    def _successor_states(self, block, state):
+        last = self._last_insn(block)
+        if last == idc.BADADDR:
+            return []
+
+        insn = self._decode(last)
+        if not insn:
+            return []
+
+        if insn.itype in RETURN_TYPES:
+            return []
+        if insn.itype in JUMP_TYPES:
+            target = get_branch_target(last)
+            return [(target, self._copy_state(state))]
+
+        if insn.itype in CONDITIONAL_JUMPS:
+            target = get_branch_target(last)
+            fallthrough = self._fallthrough(last, block)
+            case = state.get("_last_cmp_case")
+            true_state = self._copy_state(state)
+            false_state = self._copy_state(state)
+
+            out = []
+            if insn.itype in EQ_TRUE_JUMP_TYPES and case is not None:
+                true_state["case"] = case
+                true_state.pop("_last_cmp_case", None)
+                false_state.pop("_last_cmp_case", None)
+            elif insn.itype in EQ_FALSE_JUMP_TYPES and case is not None:
+                false_state["case"] = case
+                false_state.pop("_last_cmp_case", None)
+                true_state.pop("_last_cmp_case", None)
+            elif case is not None:
+                true_state.pop("_last_cmp_case", None)
+
+            if target != idc.BADADDR:
+                out.append((target, true_state))
+            if fallthrough != idc.BADADDR:
+                out.append((fallthrough, false_state))
+            return out
+
+        return [(succ.start_ea, self._copy_state(state)) for succ in block.succs()]
+
+    def _is_reg_reg(self, insn, itype, src_reg):
+        op0 = insn.ops[0]
+        op1 = insn.ops[1]
+        return (
+            insn.itype == itype
+            and op0.type == ida_ua.o_reg
+            and op1.type == ida_ua.o_reg
+            and op1.reg == src_reg
+        )
+
 
 class CallTable:
     def __init__(self, func_address) -> None:
@@ -764,16 +776,8 @@ class ServerZoneIpcType:
         self.funcs = {}
         for func in self.config["__init__"]:
             if self.config["__init__"][func]:
-                try:
-                    print(f"Init SimpleSwitch {func}")
-                    self.funcs[func] = SimpleSwitch(self.config["__init__"][func])
-                except:
-                    try:
-                        print(f"Init SimpleSwitch2 {func}")
-                        self.funcs[func] = SimpleSwitch2(self.config["__init__"][func])
-                    except:
-                        print(f"Init SwitchTableX {func}")
-                        self.funcs[func] = SwitchTableX(self.config["__init__"][func])
+                print(f"Init DisasmSwitchResolver {func}")
+                self.funcs[func] = DisasmSwitchResolver(self.config["__init__"][func])
         del self.config["__init__"]
         print("ServerZone Inited...")
         for name in self.config:
@@ -820,8 +824,12 @@ class ServerZoneIpcType:
         else:
             return False
 
-#todo 递归层数检查
-    def find_in_table_process(self, ea, name):
+    def find_in_table_process(self, ea, name, visited=None, depth=0, max_depth=64):
+        if visited is None:
+            visited = set()
+        if ea in visited or depth > max_depth:
+            return False
+        next_visited = visited | {ea}
         print(f'{name} 0x{ea:03x}')
         if idaapi.segtype(ea) != idaapi.SEG_CODE:
             return False
@@ -833,13 +841,11 @@ class ServerZoneIpcType:
             return False
         xrefs = [xref.frm for xref in xrefs_all if self.table.in_switch(xref.frm)]
         if len(xrefs) < 1:
-            if functools.reduce(
-                lambda a, b: a or b,
-                [self.find_in_table_process(xref.frm, name) for xref in xrefs_all],
-            ):
-                return True
-            else:
-                return False
+            results = [
+                self.find_in_table_process(xref.frm, name, next_visited, depth + 1, max_depth)
+                for xref in xrefs_all
+            ]
+            return any(results)
         else:
             ea = xrefs[0]
             return self.find_in_table_result(ea, name)
@@ -1021,24 +1027,33 @@ class ClientZoneIpcType:
             return False
 
 
-class ConfigReader:
-    def __init__(self) -> None:
-        self.path = os.path.join(
-            ConfigPath,
-            f"signatures.json",
-        )
+class SignatureConfig:
+    def __init__(self, path=None) -> None:
+        self.path = path or os.path.join(ConfigPath, f"signatures.json")
+
+    def load(self):
         with open(self.path, "r") as f:
-            self.content = json.load(f)
-        self.instance(self.content["ServerZoneIpcType"])
-        self.instance(self.content["ClientZoneIpcType"])
+            return json.load(f)
 
-    def instance(self, item):
-        for i in item:
-            if i == "__init__":
-                self.instance(item[i])
-            item[i] = self.sig2addr(item[i], i)
 
-    def sig2addr(self, sig, name):
+class SignatureResolver:
+    def __init__(self, region) -> None:
+        self.region = region
+        self._address_cache = {}
+
+    def resolve_config(self, config):
+        resolved = copy.deepcopy(config)
+        self.resolve_section(resolved["ServerZoneIpcType"])
+        self.resolve_section(resolved["ClientZoneIpcType"])
+        return resolved
+
+    def resolve_section(self, item):
+        for name in item:
+            if name == "__init__":
+                self.resolve_section(item[name])
+            item[name] = self.resolve_entry(item[name], name)
+
+    def resolve_entry(self, sig, name):
         address = idc.BADADDR
         _sig = None
 
@@ -1047,22 +1062,22 @@ class ConfigReader:
         elif type(sig) == dict:
             if "Signature" in sig:
                 if isinstance(sig["Signature"], dict):
-                    if Region == "Global" and "Global" in sig["Signature"]:
+                    if self.region == "Global" and "Global" in sig["Signature"]:
                         _sig = sig["Signature"]["Global"]
-                    elif Region == "CN" and "CN" in sig["Signature"]:
+                    elif self.region == "CN" and "CN" in sig["Signature"]:
                         _sig = sig["Signature"]["CN"]
-                    elif Region == "KR" and "KR" in sig["Signature"]:
+                    elif self.region == "KR" and "KR" in sig["Signature"]:
                         _sig = sig["Signature"]["KR"]
                 else:
                     _sig = sig["Signature"]
 
             if _sig is None:
-                if Region == "Global" and "Global" in sig:
-                    return self.sig2addr(sig["Global"], name)
-                elif Region == "CN" and "CN" in sig:
-                    return self.sig2addr(sig["CN"], name)
-                elif Region == "KR" and "KR" in sig:
-                    return self.sig2addr(sig["KR"], name)
+                if self.region == "Global" and "Global" in sig:
+                    return self.resolve_entry(sig["Global"], name)
+                elif self.region == "CN" and "CN" in sig:
+                    return self.resolve_entry(sig["CN"], name)
+                elif self.region == "KR" and "KR" in sig:
+                    return self.resolve_entry(sig["KR"], name)
             
             if _sig is None:
                 return sig
@@ -1072,10 +1087,7 @@ class ConfigReader:
             errors["SigNotFound"].append(name)
             return None
 
-        if "Index" in sig and int(sig["Index"]):
-            address = find_pattern(_sig, sig["Index"]+1)
-        else:
-            address = find_pattern(_sig)
+        address = self.resolve_signature_address(_sig, sig)
 
         if address == idc.BADADDR:
             print(f"Signature {name} Not Found")
@@ -1088,94 +1100,21 @@ class ConfigReader:
                 address = get_ctrl_target(address)
             return address
 
-
-config = ConfigReader()
-print(config.content)
-serverzone = ServerZoneIpcType(config)
-print(serverzone.content)
-clientzone = ClientZoneIpcType(config)
-print(clientzone.content)
-print(errors)
-
-opcodes_internal = {
-    "version": BuildID,
-    "region": Region,
-    "lists": {
-        "ServerZoneIpcType": serverzone.content,
-        "ClientZoneIpcType": clientzone.content,
-    },
-}
-opcodes = {
-    "version": BuildID,
-    "region": Region,
-    "lists": {
-        "ServerZoneIpcType": [
-            {"name": i, "opcode": serverzone.content[i]} for i in serverzone.content
-        ],
-        "ClientZoneIpcType": [
-            {"name": i, "opcode": clientzone.content[i]} for i in clientzone.content
-        ],
-    },
-}
-
-debugs = {"ClientCallTable": clientzone.table.content}
+    def resolve_signature_address(self, pattern, sig):
+        index = sig.get("Index", 0) if isinstance(sig, dict) else 0
+        times = int(index) + 1 if int(index) else 1
+        cache_key = (pattern, times)
+        if cache_key not in self._address_cache:
+            self._address_cache[cache_key] = find_pattern(pattern, times)
+        return self._address_cache[cache_key]
 
 
-output_dir = os.path.join(
-    OutputPath,
-    f"{Region}_{BuildID}",
-)
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-outpath = lambda name: os.path.join(
-    output_dir,
-    name,
-)
-opcodes_internal_path = outpath("opcodes_internal.json")
-
-if Region != "Global":
-    ipcs_filename = f"Ipcs_{Region.lower()}.cs"
-else:
-    ipcs_filename = "Ipcs.cs"
-
-opcodes_csharp_path = outpath(ipcs_filename)
-errors_path = outpath("errors.json")
-debugs_path = outpath("debug.json")
-opcodes_path = outpath("opcodes.json")
-lemegeton_path = outpath("lemegeton.xml")
-
-with open(opcodes_path, "w+") as f:
-    json.dump(opcodes, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Result saved on {opcodes_path}")
-with open(opcodes_internal_path, "w+") as f:
-    json.dump(opcodes_internal, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Result saved on {opcodes_internal_path}")
-
-with open(errors_path, "w+") as f:
-    json.dump(errors, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Error saved on {errors_path}")
-with open(debugs_path, "w+") as f:
-    json.dump(debugs, f, sort_keys=False, indent=4, separators=(",", ":"))
-    print(f"Dump saved on {debugs_path}")
-
-template_path = os.path.join(ConfigPath, f"machina.template")
-mtemplate = []
-mresult = []
-with open(template_path, "r") as f:
-    mtemplate = f.readlines()
-for l in mtemplate:
-    opcode_temp = re.match(r".+(?P<opcode_name>\{.+\})", l).groupdict()["opcode_name"]
-    opcode_name = opcode_temp[1:-1]
-    for op in (
-        opcodes["lists"]["ServerZoneIpcType"] + opcodes["lists"]["ClientZoneIpcType"]
-    ):
-        if op["name"] == opcode_name:
-            l = l.replace(opcode_temp, f"{op['opcode']:X}")
-            break
-    mresult.append(l)
-with open(outpath("machina.txt"), "w+") as f:
-    f.writelines(mresult)
-print(f'Gen machina.txt on {outpath("machina.txt")}')
+class ConfigReader:
+    def __init__(self, config_loader=None, resolver=None) -> None:
+        self.config_loader = config_loader or SignatureConfig()
+        self.resolver = resolver or SignatureResolver(Region)
+        self.raw_content = self.config_loader.load()
+        self.content = self.resolver.resolve_config(self.raw_content)
 
 
 def get_enum_textblock(name, enums, ntype, indent):
@@ -1188,27 +1127,121 @@ def get_enum_textblock(name, enums, ntype, indent):
     return list(map(lambda l: " " * indent + l, res))
 
 
-ipcs_line = [
-    "// Generated by https://github.com/gamous/FFXIVNetworkOpcodes",
-    f"namespace FFXIVOpcodes.{Region}",
-    "{",
-]
-ipcs_line += get_enum_textblock("ServerLobbyIpcType", {}, 'ushort', 4)
-ipcs_line += get_enum_textblock("ClientLobbyIpcType", {}, 'ushort', 4)
-ipcs_line += get_enum_textblock("ServerZoneIpcType", serverzone.content, 'ushort', 4)
-ipcs_line += get_enum_textblock("ClientZoneIpcType", clientzone.content, 'ushort', 4)
-ipcs_line += get_enum_textblock("ServerChatIpcType", {}, 'ushort', 4)
-ipcs_line += get_enum_textblock("ClientChatIpcType", {}, 'ushort', 4)
-ipcs_line += ["}"]
-ipcs_line = list(map(lambda l: l + "\n", ipcs_line))
-with open(opcodes_csharp_path, "w+") as f:
-    f.writelines(ipcs_line)
-print(f'Gen ipcs on {opcodes_csharp_path,}')
+def build_opcode_outputs(serverzone, clientzone):
+    opcodes_internal = {
+        "version": BuildID,
+        "region": Region,
+        "lists": {
+            "ServerZoneIpcType": serverzone.content,
+            "ClientZoneIpcType": clientzone.content,
+        },
+    }
+    opcodes = {
+        "version": BuildID,
+        "region": Region,
+        "lists": {
+            "ServerZoneIpcType": [
+                {"name": i, "opcode": serverzone.content[i]} for i in serverzone.content
+            ],
+            "ClientZoneIpcType": [
+                {"name": i, "opcode": clientzone.content[i]} for i in clientzone.content
+            ],
+        },
+    }
+    debugs = {"ClientCallTable": clientzone.table.content}
+    return opcodes, opcodes_internal, debugs
 
 
-Region_Name="EN/DE/FR/JP" if Region=="Global" else Region
+def get_output_paths():
+    output_dir = os.path.join(
+        OutputPath,
+        f"{Region}_{BuildID}",
+    )
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.0000">
+    def outpath(name):
+        return os.path.join(output_dir, name)
+
+    if Region != "Global":
+        ipcs_filename = f"Ipcs_{Region.lower()}.cs"
+    else:
+        ipcs_filename = "Ipcs.cs"
+
+    return {
+        "opcodes_internal": outpath("opcodes_internal.json"),
+        "ipcs": outpath(ipcs_filename),
+        "errors": outpath("errors.json"),
+        "debugs": outpath("debug.json"),
+        "opcodes": outpath("opcodes.json"),
+        "lemegeton": outpath("lemegeton.xml"),
+        "machina": outpath("machina.txt"),
+    }
+
+
+def write_json_outputs(paths, opcodes, opcodes_internal, debugs):
+    with open(paths["opcodes"], "w+") as f:
+        json.dump(opcodes, f, sort_keys=False, indent=4, separators=(",", ":"))
+        print(f"Result saved on {paths['opcodes']}")
+    with open(paths["opcodes_internal"], "w+") as f:
+        json.dump(opcodes_internal, f, sort_keys=False, indent=4, separators=(",", ":"))
+        print(f"Result saved on {paths['opcodes_internal']}")
+
+    with open(paths["errors"], "w+") as f:
+        json.dump(errors, f, sort_keys=False, indent=4, separators=(",", ":"))
+        print(f"Error saved on {paths['errors']}")
+    with open(paths["debugs"], "w+") as f:
+        json.dump(debugs, f, sort_keys=False, indent=4, separators=(",", ":"))
+        print(f"Dump saved on {paths['debugs']}")
+
+
+def write_machina(paths, opcodes):
+    template_path = os.path.join(ConfigPath, f"machina.template")
+    mresult = []
+    with open(template_path, "r") as f:
+        mtemplate = f.readlines()
+    for l in mtemplate:
+        match = re.match(r".+(?P<opcode_name>\{.+\})", l)
+        if not match:
+            mresult.append(l)
+            continue
+        opcode_temp = match.groupdict()["opcode_name"]
+        opcode_name = opcode_temp[1:-1]
+        for op in (
+            opcodes["lists"]["ServerZoneIpcType"] + opcodes["lists"]["ClientZoneIpcType"]
+        ):
+            if op["name"] == opcode_name:
+                l = l.replace(opcode_temp, f"{op['opcode']:X}")
+                break
+        mresult.append(l)
+    with open(paths["machina"], "w+") as f:
+        f.writelines(mresult)
+    print(f'Gen machina.txt on {paths["machina"]}')
+
+
+def write_ipcs(paths, serverzone, clientzone):
+    ipcs_line = [
+        "// Generated by https://github.com/gamous/FFXIVNetworkOpcodes",
+        f"namespace FFXIVOpcodes.{Region}",
+        "{",
+    ]
+    ipcs_line += get_enum_textblock("ServerLobbyIpcType", {}, 'ushort', 4)
+    ipcs_line += get_enum_textblock("ClientLobbyIpcType", {}, 'ushort', 4)
+    ipcs_line += get_enum_textblock("ServerZoneIpcType", serverzone.content, 'ushort', 4)
+    ipcs_line += get_enum_textblock("ClientZoneIpcType", clientzone.content, 'ushort', 4)
+    ipcs_line += get_enum_textblock("ServerChatIpcType", {}, 'ushort', 4)
+    ipcs_line += get_enum_textblock("ClientChatIpcType", {}, 'ushort', 4)
+    ipcs_line += ["}"]
+    ipcs_line = list(map(lambda l: l + "\n", ipcs_line))
+    with open(paths["ipcs"], "w+") as f:
+        f.writelines(ipcs_line)
+    print(f'Gen ipcs on {paths["ipcs"],}')
+
+
+def write_lemegeton(paths, serverzone):
+    Region_Name="EN/DE/FR/JP" if Region=="Global" else Region
+
+    lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.0000">
 			<Opcodes>
 				<Opcode Name="StatusEffectList" Id="{serverzone.content["StatusEffectList"]}" />
 				<Opcode Name="StatusEffectList2" Id="{serverzone.content["StatusEffectList2"]}" />
@@ -1228,6 +1261,27 @@ lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.000
 				<Opcode Name="EventPlay64" Id="{serverzone.content["EventPlay64"]}" />
 			</Opcodes>
 		</Region>"""
-with open(lemegeton_path, "w+") as f:
-    f.write(lemegeton_opcodes)
-print(f'Gen lemegeton_bludprint.xml on {lemegeton_path,}')
+    with open(paths["lemegeton"], "w+") as f:
+        f.write(lemegeton_opcodes)
+    print(f'Gen lemegeton_bludprint.xml on {paths["lemegeton"],}')
+
+
+def main():
+    config = ConfigReader()
+    print(config.content)
+    serverzone = ServerZoneIpcType(config)
+    print(serverzone.content)
+    clientzone = ClientZoneIpcType(config)
+    print(clientzone.content)
+    print(errors)
+
+    opcodes, opcodes_internal, debugs = build_opcode_outputs(serverzone, clientzone)
+    paths = get_output_paths()
+    write_json_outputs(paths, opcodes, opcodes_internal, debugs)
+    write_machina(paths, opcodes)
+    write_ipcs(paths, serverzone, clientzone)
+    write_lemegeton(paths, serverzone)
+
+
+if __name__ == "__main__":
+    main()
