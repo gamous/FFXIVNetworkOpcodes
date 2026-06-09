@@ -231,6 +231,49 @@ class CallGraphCache:
         return self._call_targets[func_start_ea]
 
 
+class FunctionView:
+    def __init__(self, func):
+        self.func = func
+        self.blocks = list(ida_gdl.FlowChart(func))
+        self.block_by_start = {block.start_ea: block for block in self.blocks}
+        self.addr_to_block = {}
+        self.insns_by_block = {}
+        self._decoded = {}
+        self._last_insn = {}
+        for block in self.blocks:
+            insns = []
+            ea = block.start_ea
+            while ea != idc.BADADDR and ea < block.end_ea:
+                self.addr_to_block[ea] = block
+                insns.append(ea)
+                ea = idc.next_head(ea, block.end_ea)
+            self.insns_by_block[block.start_ea] = insns
+
+    def block_at(self, ea):
+        return self.addr_to_block.get(ea)
+
+    def block_starting_at(self, ea):
+        return self.block_by_start.get(ea)
+
+    def contains_block(self, ea):
+        return ea in self.block_by_start
+
+    def block_insns(self, block):
+        return self.insns_by_block.get(block.start_ea, [])
+
+    def last_insn(self, block):
+        if block.start_ea not in self._last_insn:
+            insns = self.block_insns(block)
+            self._last_insn[block.start_ea] = insns[-1] if insns else idc.BADADDR
+        return self._last_insn[block.start_ea]
+
+    def decode(self, ea):
+        if ea not in self._decoded:
+            insn = ida_ua.insn_t()
+            self._decoded[ea] = insn if ida_ua.decode_insn(insn, ea) > 0 else None
+        return self._decoded[ea]
+
+
 class EventPacketResolver:
     def __init__(self, func_ea, sender):
         self.func = ida_funcs.get_func(func_ea)
@@ -238,14 +281,7 @@ class EventPacketResolver:
             raise ValueError(f"Could not find function at {func_ea:x}")
         self.sender = sender
         self._ops = {}
-        self.blocks = list(ida_gdl.FlowChart(self.func))
-        self.block_by_start = {block.start_ea: block for block in self.blocks}
-        self.addr_to_block = {}
-        for block in self.blocks:
-            ea = block.start_ea
-            while ea != idc.BADADDR and ea < block.end_ea:
-                self.addr_to_block[ea] = block
-                ea = idc.next_head(ea, block.end_ea)
+        self.view = FunctionView(self.func)
 
     def resolve(self):
         set_vals = self._sender_opcode_sets()
@@ -256,8 +292,8 @@ class EventPacketResolver:
 
     def _op(self, ea):
         if ea not in self._ops:
-            insn = ida_ua.insn_t()
-            if ida_ua.decode_insn(insn, ea) > 0:
+            insn = self.view.decode(ea)
+            if insn:
                 mnem = insn.get_canon_mnem()
                 itype = insn.itype
             else:
@@ -319,7 +355,7 @@ class EventPacketResolver:
                     to_analyze.append(xref.frm)
 
     def _find_cond(self, start_ea, end_eas):
-        start_block = self.addr_to_block.get(start_ea)
+        start_block = self.view.block_at(start_ea)
         if not start_block:
             return
 
@@ -333,13 +369,12 @@ class EventPacketResolver:
                 continue
             seen.add(state_key)
 
-            block = self.block_by_start.get(block_start)
+            block = self.view.block_starting_at(block_start)
             if not block:
                 continue
 
             out_last_cond = last_cond
-            ea = block.start_ea
-            while ea != idc.BADADDR and ea < block.end_ea:
+            for ea in self.view.block_insns(block):
                 if ea in end_eas:
                     yield ea, conds
                     break
@@ -347,7 +382,6 @@ class EventPacketResolver:
                 op = self._op(ea)
                 if op.itype in (ida_allins.NN_test, ida_allins.NN_cmp):
                     out_last_cond = op
-                ea = idc.next_head(ea, block.end_ea)
             else:
                 for succ_start, succ_conds, succ_last_cond in self._successor_cond_states(block, conds, out_last_cond):
                     work.append((succ_start, succ_conds, succ_last_cond))
@@ -362,19 +396,19 @@ class EventPacketResolver:
             return []
         if op.itype in JUMP_TYPES:
             target = get_branch_target(last_ea)
-            return [(target, conds, last_cond)] if target in self.block_by_start else []
+            return [(target, conds, last_cond)] if self.view.contains_block(target) else []
 
         if op.itype in CONDITIONAL_JUMPS:
             target = get_branch_target(last_ea)
             fallthrough = self._fallthrough(last_ea, block)
             out = []
-            if target in self.block_by_start:
+            if self.view.contains_block(target):
                 out.append((target, conds + [(last_ea, op.itype, last_cond, False)], last_cond))
-            if fallthrough in self.block_by_start:
+            if self.view.contains_block(fallthrough):
                 out.append((fallthrough, conds + [(last_ea, op.itype, last_cond, True)], last_cond))
             return out
 
-        return [(succ.start_ea, conds, last_cond) for succ in block.succs() if succ.start_ea in self.block_by_start]
+        return [(succ.start_ea, conds, last_cond) for succ in block.succs() if self.view.contains_block(succ.start_ea)]
 
     def _fallthrough(self, ea, block):
         nxt = idc.next_head(ea, block.end_ea)
@@ -387,12 +421,7 @@ class EventPacketResolver:
         return idc.BADADDR
 
     def _last_insn(self, block):
-        ea = block.start_ea
-        last = idc.BADADDR
-        while ea != idc.BADADDR and ea < block.end_ea:
-            last = ea
-            ea = idc.next_head(ea, block.end_ea)
-        return last
+        return self.view.last_insn(block)
 
     def _range_from_conditions(self, ea, conds):
         if len(conds) == 0 or conds[-1][2] is None:
@@ -626,14 +655,7 @@ class DisasmSwitchResolver:
             print(f"Error: Could not find function at 0x{switch_address:x}")
             return
 
-        self.blocks = list(ida_gdl.FlowChart(self.switch_func))
-        self.block_by_start = {block.start_ea: block for block in self.blocks}
-        self.addr_to_block = {}
-        for block in self.blocks:
-            ea = block.start_ea
-            while ea != idc.BADADDR and ea < block.end_ea:
-                self.addr_to_block[ea] = block
-                ea = idc.next_head(ea, block.end_ea)
+        self.view = FunctionView(self.switch_func)
 
         self._resolve()
         if not self.content:
@@ -661,7 +683,7 @@ class DisasmSwitchResolver:
 
         while work:
             block_start, state = work.pop()
-            block = self.block_by_start.get(block_start)
+            block = self.view.block_starting_at(block_start)
             if not block:
                 continue
             key = (block_start, self._state_key(state))
@@ -674,7 +696,7 @@ class DisasmSwitchResolver:
                 found.append(sink)
 
             for succ_start, succ_state in self._successor_states(block, out_state):
-                if succ_start in self.block_by_start:
+                if self.view.contains_block(succ_start):
                     work.append((succ_start, succ_state))
 
         self.content = self._dedupe(found)
@@ -701,10 +723,7 @@ class DisasmSwitchResolver:
         return result
 
     def _decode(self, ea):
-        insn = ida_ua.insn_t()
-        if ida_ua.decode_insn(insn, ea) <= 0:
-            return None
-        return insn
+        return self.view.decode(ea)
 
     def _fallthrough(self, ea, block):
         nxt = idc.next_head(ea, block.end_ea)
@@ -716,12 +735,7 @@ class DisasmSwitchResolver:
         return idc.BADADDR
 
     def _last_insn(self, block):
-        ea = block.start_ea
-        last = idc.BADADDR
-        while ea != idc.BADADDR and ea < block.end_ea:
-            last = ea
-            ea = idc.next_head(ea, block.end_ea)
-        return last
+        return self.view.last_insn(block)
 
     def _expr_from_operand(self, ea, op_idx, state):
         insn = self._decode(ea)
@@ -756,12 +770,9 @@ class DisasmSwitchResolver:
         state = self._copy_state(state)
         last_cmp_case = None
         pending_arg = None
-        ea = block.start_ea
-
-        while ea != idc.BADADDR and ea < block.end_ea:
+        for ea in self.view.block_insns(block):
             decoded = self._decode(ea)
             if not decoded:
-                ea = idc.next_head(ea, block.end_ea)
                 continue
             op0 = decoded.ops[0]
             op1 = decoded.ops[1]
@@ -792,8 +803,6 @@ class DisasmSwitchResolver:
             elif decoded.itype == ida_allins.NN_call:
                 if pending_arg not in (None, 0) and state.get("case") is not None:
                     return state, {"case": state["case"], "arg": pending_arg}
-
-            ea = idc.next_head(ea, block.end_ea)
 
         return state, None
 
