@@ -14,6 +14,7 @@ import ida_allins
 import os
 import json
 import functools
+import bisect
 import re
 import typing
 import copy
@@ -272,6 +273,28 @@ class FunctionView:
             insn = ida_ua.insn_t()
             self._decoded[ea] = insn if ida_ua.decode_insn(insn, ea) > 0 else None
         return self._decoded[ea]
+
+
+class RangeIndex:
+    def __init__(self, ranges):
+        self._items = sorted(
+            ((item["start"], item["end"], item["case"]) for item in ranges),
+            key=lambda item: item[0],
+        )
+        self._starts = [item[0] for item in self._items]
+        self._max_width = max((end - start for start, end, _ in self._items), default=0)
+
+    def index(self, ea):
+        cases = set()
+        idx = bisect.bisect_right(self._starts, ea) - 1
+        while idx >= 0:
+            start, end, case = self._items[idx]
+            if start <= ea < end:
+                cases.add(case)
+            if ea - start > self._max_width:
+                break
+            idx -= 1
+        return sorted(cases)
 
 
 class EventPacketResolver:
@@ -540,6 +563,7 @@ class SwitchTable:
                 for start, end in ranges:
                     print(f"case 0x{case_val:03x}: block@{start:x} - {end:x}")
                     self.content.append({"case": case_val, "start": start, "end": end})
+        self.range_index = RangeIndex(self.content)
         return
 
     def _find_switches(self):
@@ -626,12 +650,7 @@ class SwitchTable:
         )
 
     def index(self, ea) -> list:
-        maybe = set()
-        if self.in_switch(ea):
-            for case in self.content:
-                if case["start"] <= ea < case["end"]:
-                    maybe.add(case["case"])
-        return sorted(maybe)
+        return self.range_index.index(ea) if self.in_switch(ea) else []
 
 
 class CaseExpr(typing.NamedTuple):
@@ -866,6 +885,7 @@ class CallTable:
         self._visited = set()
         self.init_send_table(func_address)
         self.content.sort(key=lambda x: x["case"])
+        self.range_index = RangeIndex(self.content)
         print("Sorted CallTable")
         for i in self.content:
             print(f"Code 0x{i['case']:03x}: between@{i['start']:x} - {i['end']:x}")
@@ -949,7 +969,7 @@ class CallTable:
         self.content.append({"case": op, "start": start, "end": end})
 
     def index(self, ea):
-        return sorted({i["case"] for i in self.content if ea >= i["start"] and ea < i["end"]})
+        return self.range_index.index(ea)
 
 
 class ServerZoneIpcType:
