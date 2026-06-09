@@ -205,6 +205,32 @@ class StorageRef(typing.NamedTuple):
     text: str
 
 
+class CallGraphCache:
+    def __init__(self):
+        self._call_targets = {}
+        self._call_xrefs_to = {}
+
+    def call_xrefs_to(self, ea):
+        if ea not in self._call_xrefs_to:
+            self._call_xrefs_to[ea] = [
+                xref
+                for xref in idautils.XrefsTo(ea)
+                if xref.type in (ida_xref.fl_CN, ida_xref.fl_CF)
+            ]
+        return self._call_xrefs_to[ea]
+
+    def call_targets_from(self, func_start_ea):
+        if func_start_ea not in self._call_targets:
+            targets = set()
+            for item_ea in idautils.FuncItems(func_start_ea):
+                if idc.print_insn_mnem(item_ea) == "call":
+                    target = get_ctrl_target(item_ea)
+                    if target != idc.BADADDR:
+                        targets.add(target)
+            self._call_targets[func_start_ea] = targets
+        return self._call_targets[func_start_ea]
+
+
 class EventPacketResolver:
     def __init__(self, func_ea, sender):
         self.func = ida_funcs.get_func(func_ea)
@@ -1015,6 +1041,7 @@ class ClientZoneIpcType:
     def __init__(self, config) -> None:
         self.config = config.content["ClientZoneIpcType"]
         self.content = {}
+        self.call_graph = CallGraphCache()
 
         # ProcessZonePacketUp 是最底层的发送函数
         base_sender_ea = self.config["__init__"]["ProcessZonePacketUp"]
@@ -1065,20 +1092,26 @@ class ClientZoneIpcType:
     def find_wrapper_functions(self, base_sender_ea):
         """查找所有调用 ProcessZonePacketUp 的 wrapper 函数（递归查找多层）"""
         wrappers = []
+        wrapper_set = set()
+        visited = set()
 
         def find_callers_recursive(ea, depth=0, max_depth=3):
             """递归查找调用链，最多3层"""
             if depth > max_depth:
                 return
+            key = (ea, depth)
+            if key in visited:
+                return
+            visited.add(key)
 
-            for xref in idautils.XrefsTo(ea):
-                if xref.type in (ida_xref.fl_CN, ida_xref.fl_CF):  # Call xrefs
-                    caller_func = ida_funcs.get_func(xref.frm)
-                    if caller_func and caller_func.start_ea not in wrappers:
-                        wrappers.append(caller_func.start_ea)
-                        print(f"Found wrapper function at {caller_func.start_ea:x} (depth={depth})")
-                        # 继续向上查找
-                        find_callers_recursive(caller_func.start_ea, depth + 1, max_depth)
+            for xref in self.call_graph.call_xrefs_to(ea):
+                caller_func = ida_funcs.get_func(xref.frm)
+                if caller_func and caller_func.start_ea not in wrapper_set:
+                    wrappers.append(caller_func.start_ea)
+                    wrapper_set.add(caller_func.start_ea)
+                    print(f"Found wrapper function at {caller_func.start_ea:x} (depth={depth})")
+                    # 继续向上查找
+                    find_callers_recursive(caller_func.start_ea, depth + 1, max_depth)
 
         find_callers_recursive(base_sender_ea)
         return wrappers
@@ -1090,12 +1123,7 @@ class ClientZoneIpcType:
             return idc.BADADDR
 
         # 收集目标函数调用的所有函数
-        called_funcs = set()
-        for item_ea in idautils.FuncItems(func.start_ea):
-            if idc.print_insn_mnem(item_ea) == "call":
-                target = get_ctrl_target(item_ea)
-                if target != idc.BADADDR:
-                    called_funcs.add(target)
+        called_funcs = self.call_graph.call_targets_from(func.start_ea)
 
         # 查找目标函数直接调用的 wrapper
         for wrapper_ea in wrapper_funcs:
@@ -1107,12 +1135,10 @@ class ClientZoneIpcType:
         for called_ea in called_funcs:
             called_func = ida_funcs.get_func(called_ea)
             if called_func:
-                for item_ea in idautils.FuncItems(called_func.start_ea):
-                    if idc.print_insn_mnem(item_ea) == "call":
-                        target = get_ctrl_target(item_ea)
-                        if target in wrapper_funcs:
-                            print(f"Found indirect wrapper call: {target:x} (via {called_ea:x}) for function {func_ea:x}")
-                            return target
+                for target in self.call_graph.call_targets_from(called_func.start_ea):
+                    if target in wrapper_funcs:
+                        print(f"Found indirect wrapper call: {target:x} (via {called_ea:x}) for function {func_ea:x}")
+                        return target
 
         print(f"No wrapper found for function {func_ea:x}")
         return idc.BADADDR
