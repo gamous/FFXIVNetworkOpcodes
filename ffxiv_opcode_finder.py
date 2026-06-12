@@ -1235,13 +1235,22 @@ class SignatureResolver:
 
     def find_switch_dispatcher(self, sizes, max_size):
         candidates = []
+        near_candidates = []
         for start in idautils.Functions(min_text_ea, max_text_ea):
             func = ida_funcs.get_func(start)
             if not func or func.end_ea - func.start_ea > max_size:
                 continue
             written_sizes, has_r8_input, call_count = self.switch_dispatcher_stats(func)
+            if not has_r8_input or call_count < len(sizes):
+                continue
             if written_sizes == sizes and has_r8_input and call_count >= len(sizes):
                 candidates.append(func.start_ea)
+            else:
+                overlap = len(written_sizes & sizes)
+                if overlap:
+                    near_candidates.append(
+                        (overlap, abs(len(written_sizes) - len(sizes)), func.start_ea, written_sizes)
+                    )
 
         if len(candidates) == 1:
             return candidates[0]
@@ -1250,7 +1259,23 @@ class SignatureResolver:
                 "SwitchDispatcher ambiguous for sizes "
                 f"{sorted(sizes)}: {', '.join(hex(ea) for ea in candidates)}"
             )
+        else:
+            self.print_switch_dispatcher_near_misses(sizes, near_candidates)
         return idc.BADADDR
+
+    def print_switch_dispatcher_near_misses(self, sizes, near_candidates):
+        if not near_candidates:
+            return
+        near_candidates.sort(key=lambda item: (-item[0], item[1], item[2]))
+        print(f"SwitchDispatcher no exact match for sizes {sorted(sizes)}")
+        for overlap, _, ea, written_sizes in near_candidates[:5]:
+            print(
+                "  near "
+                f"{ea:x}: overlap={overlap} "
+                f"sizes={sorted(written_sizes)} "
+                f"missing={sorted(sizes - written_sizes)} "
+                f"extra={sorted(written_sizes - sizes)}"
+            )
 
     def switch_dispatcher_stats(self, func):
         written_sizes = set()
