@@ -1,0 +1,189 @@
+CN_2026.05.25 -> CN_2026.06.10
+opcodes: old=157 new=157 added=0 removed=0 changed=157
+opcodes_internal: old=157 new=157 added=0 removed=0 changed=157
+errors SigNotFound: old=30 new=30 added=0 removed=0
+errors FuncNotFound: old=0 new=0 added=0 removed=0
+errors ArgvNotFound: old=0 new=0 added=0 removed=0
+
+ADDED OPCODES
+(none)
+
+REMOVED OPCODES
+(none)
+
+CHANGED OPCODES
+ClientZoneIpcType.ActionRequest: 251 -> 884
+ClientZoneIpcType.ActionRequestGroundTargeted: 454 -> 513
+ClientZoneIpcType.ChatHandler: 228 -> 495
+ClientZoneIpcType.ClientCountdownInitiate: 847 -> 895
+ClientZoneIpcType.ClientTrigger: 800 -> 294
+ClientZoneIpcType.EventAction1: 167 -> 401
+ClientZoneIpcType.EventAction128: 477 -> 165
+ClientZoneIpcType.EventAction16: 923 -> 531
+ClientZoneIpcType.EventAction255: 816 -> 896
+ClientZoneIpcType.EventAction32: 617 -> 564
+ClientZoneIpcType.EventAction4: 327 -> 561
+ClientZoneIpcType.EventAction64: 312 -> 239
+ClientZoneIpcType.EventAction8: 977 -> 907
+ClientZoneIpcType.EventFinish1: 393 -> 304
+ClientZoneIpcType.EventFinish128: 343 -> 761
+ClientZoneIpcType.EventFinish16: 637 -> 827
+ClientZoneIpcType.EventFinish255: 239 -> 931
+ClientZoneIpcType.EventFinish32: 222 -> 916
+ClientZoneIpcType.EventFinish4: 488 -> 639
+ClientZoneIpcType.EventFinish64: 915 -> 473
+ClientZoneIpcType.EventFinish8: 457 -> 866
+ClientZoneIpcType.Heartbeat: 796 -> 878
+ClientZoneIpcType.InventoryModifyHandler: 242 -> 190
+ClientZoneIpcType.MarketBoardPurchaseHandler: 418 -> 660
+ClientZoneIpcType.MarketBoardRequestItemListingInfo: 658 -> 522
+ClientZoneIpcType.SetSearchInfoHandler: 525 -> 978
+ClientZoneIpcType.UpdatePositionHandler: 663 -> 349
+ClientZoneIpcType.UpdatePositionInstance: 793 -> 256
+ClientZoneIpcType.WorldTravel: 113 -> 745
+ServerZoneIpcType._record_unk29_: 120 -> 662
+ServerZoneIpcType._record_unk31_: 269 -> 355
+ServerZoneIpcType.ActorCast: 758 -> 760
+ServerZoneIpcType.ActorControl: 488 -> 639
+ServerZoneIpcType.ActorControlSelf: 457 -> 866
+ServerZoneIpcType.ActorControlTarget: 637 -> 827
+ServerZoneIpcType.ActorFreeSpawn: 733 -> 893
+ServerZoneIpcType.ActorGauge: 516 -> 189
+ServerZoneIpcType.ActorMove: 950 -> 870
+ServerZoneIpcType.ActorSetPos: 655 -> 305
+ServerZoneIpcType.AirshipExplorationResult: 884 -> 735
+ServerZoneIpcType.AirshipStatus: 355 -> 148
+ServerZoneIpcType.AirshipStatusList: 609 -> 472
+ServerZoneIpcType.AlliancePos: 476 -> 956
+ServerZoneIpcType.AoeEffect16: 167 -> 401
+ServerZoneIpcType.AoeEffect24: 327 -> 561
+ServerZoneIpcType.AoeEffect32: 977 -> 907
+ServerZoneIpcType.AoeEffect8: 211 -> 321
+ServerZoneIpcType.BalloonTalk2: 537 -> 462
+ServerZoneIpcType.BalloonTalk4: 990 -> 191
+ServerZoneIpcType.BalloonTalk8: 452 -> 485
+ServerZoneIpcType.BattleTalk2: 692 -> 664
+ServerZoneIpcType.BattleTalk4: 124 -> 843
+ServerZoneIpcType.BattleTalk8: 802 -> 508
+ServerZoneIpcType.BossStatusEffectList: 838 -> 997
+ServerZoneIpcType.CEDirector: 986 -> 315
+ServerZoneIpcType.CFPreferredRole: 150 -> 139
+ServerZoneIpcType.CharaVisualEffect: 892 -> 229
+ServerZoneIpcType.CompanyAirshipStatus: 129 -> 638
+ServerZoneIpcType.CompanySubmersibleStatus: 104 -> 205
+ServerZoneIpcType.ContentFinderNotifyPop: 754 -> 253
+ServerZoneIpcType.CountdownCancel: 143 -> 479
+ServerZoneIpcType.CountdownInitiate: 584 -> 694
+ServerZoneIpcType.CreateTreasure: 851 -> 496
+ServerZoneIpcType.DirectorVars: 881 -> 361
+ServerZoneIpcType.Effect: 915 -> 473
+ServerZoneIpcType.EffectResult: 215 -> 176
+ServerZoneIpcType.EffectResult16: 970 -> 989
+ServerZoneIpcType.EffectResult4: 229 -> 991
+ServerZoneIpcType.EffectResult8: 681 -> 773
+ServerZoneIpcType.EffectResultBasic: 596 -> 120
+ServerZoneIpcType.EffectResultBasic16: 208 -> 632
+ServerZoneIpcType.EffectResultBasic32: 148 -> 318
+ServerZoneIpcType.EffectResultBasic4: 425 -> 337
+ServerZoneIpcType.EffectResultBasic64: 393 -> 304
+ServerZoneIpcType.EffectResultBasic8: 112 -> 197
+ServerZoneIpcType.EquipDisplayFlags: 285 -> 668
+ServerZoneIpcType.EurekaStatusEffectList: 193 -> 587
+ServerZoneIpcType.EventFinish: 715 -> 994
+ServerZoneIpcType.EventPlay: 126 -> 667
+ServerZoneIpcType.EventPlay128: 152 -> 586
+ServerZoneIpcType.EventPlay16: 191 -> 781
+ServerZoneIpcType.EventPlay255: 659 -> 734
+ServerZoneIpcType.EventPlay32: 244 -> 397
+ServerZoneIpcType.EventPlay4: 579 -> 680
+ServerZoneIpcType.EventPlay64: 153 -> 621
+ServerZoneIpcType.EventPlay8: 640 -> 542
+ServerZoneIpcType.EventStart: 593 -> 854
+ServerZoneIpcType.Examine: 930 -> 443
+ServerZoneIpcType.ExamineSearchInfo: 225 -> 332
+ServerZoneIpcType.Fall: 942 -> 470
+ServerZoneIpcType.FateInfo: 937 -> 631
+ServerZoneIpcType.FirstAttack: 829 -> 172
+ServerZoneIpcType.FreeCompanyDialog: 800 -> 294
+ServerZoneIpcType.FreeCompanyInfo: 839 -> 802
+ServerZoneIpcType.InitZone: 150 -> 139
+ServerZoneIpcType.InventoryActionAck: 913 -> 198
+ServerZoneIpcType.IslandWorkshopSupplyDemand: 241 -> 705
+ServerZoneIpcType.LandSetMap: 825 -> 703
+ServerZoneIpcType.Logout: 789 -> 529
+ServerZoneIpcType.MapEffect: 951 -> 980
+ServerZoneIpcType.MapEffect12: 115 -> 292
+ServerZoneIpcType.MapEffect4: 573 -> 772
+ServerZoneIpcType.MapEffect8: 577 -> 961
+ServerZoneIpcType.MarketBoardItemListing: 580 -> 736
+ServerZoneIpcType.MarketBoardItemListingCount: 647 -> 388
+ServerZoneIpcType.MarketBoardItemListingHistory: 275 -> 560
+ServerZoneIpcType.MarketBoardPurchase: 183 -> 976
+ServerZoneIpcType.MarketBoardSearchResult: 610 -> 923
+ServerZoneIpcType.ModelEquip: 295 -> 452
+ServerZoneIpcType.Mount: 664 -> 624
+ServerZoneIpcType.NpcSpawn: 619 -> 275
+ServerZoneIpcType.NpcSpawn2: 578 -> 184
+ServerZoneIpcType.NpcYell: 613 -> 179
+ServerZoneIpcType.ObjectDespawn: 141 -> 175
+ServerZoneIpcType.ObjectSpawn: 437 -> 424
+ServerZoneIpcType.OpenTreasure: 934 -> 476
+ServerZoneIpcType.PartyPos: 482 -> 145
+ServerZoneIpcType.PlaceFieldMarker: 395 -> 597
+ServerZoneIpcType.PlaceFieldMarkerPreset: 698 -> 683
+ServerZoneIpcType.PlaceMarker: 952 -> 732
+ServerZoneIpcType.PlayerSetup: 575 -> 936
+ServerZoneIpcType.PlayerSpawn: 597 -> 948
+ServerZoneIpcType.PlayerStats: 731 -> 279
+ServerZoneIpcType.Playtime: 372 -> 559
+ServerZoneIpcType.PrepareZoning: 403 -> 486
+ServerZoneIpcType.RSF: 564 -> 438
+ServerZoneIpcType.RSV: 523 -> 351
+ServerZoneIpcType.SocialList: 770 -> 968
+ServerZoneIpcType.SpAlliancePos: 422 -> 523
+ServerZoneIpcType.StatusEffectList: 661 -> 299
+ServerZoneIpcType.StatusEffectList2: 687 -> 159
+ServerZoneIpcType.StatusEffectList3: 312 -> 239
+ServerZoneIpcType.StatusEffectListForay3: 118 -> 550
+ServerZoneIpcType.SubmarineExplorationResult: 639 -> 264
+ServerZoneIpcType.SubmarineProgressionStatus: 878 -> 941
+ServerZoneIpcType.SubmarineStatusList: 975 -> 880
+ServerZoneIpcType.SystemLogMessage: 250 -> 852
+ServerZoneIpcType.SystemLogMessage144: 365 -> 832
+ServerZoneIpcType.SystemLogMessage32: 916 -> 378
+ServerZoneIpcType.SystemLogMessage48: 512 -> 945
+ServerZoneIpcType.SystemLogMessage80: 973 -> 934
+ServerZoneIpcType.Transfer: 598 -> 515
+ServerZoneIpcType.TreasureFadeOut: 776 -> 208
+ServerZoneIpcType.UnMount: 837 -> 497
+ServerZoneIpcType.UpdateAlliance: 259 -> 726
+ServerZoneIpcType.UpdateClassInfo: 125 -> 940
+ServerZoneIpcType.UpdateHate: 771 -> 780
+ServerZoneIpcType.UpdateHater: 304 -> 182
+ServerZoneIpcType.UpdateHpMpTp: 222 -> 916
+ServerZoneIpcType.UpdateInventorySlot: 432 -> 226
+ServerZoneIpcType.UpdateParty: 235 -> 844
+ServerZoneIpcType.UpdateRecastTimes: 320 -> 152
+ServerZoneIpcType.UpdateSearchInfo: 850 -> 786
+ServerZoneIpcType.UpdateSpAlliance: 604 -> 640
+ServerZoneIpcType.WardLandInfo: 339 -> 132
+ServerZoneIpcType.WeatherChange: 305 -> 606
+ServerZoneIpcType.WorldVisitQueue: 102 -> 158
+
+NEW SigNotFound
+(none)
+
+RESOLVED SigNotFound
+(none)
+
+NEW FuncNotFound
+(none)
+
+RESOLVED FuncNotFound
+(none)
+
+NEW ArgvNotFound
+(none)
+
+RESOLVED ArgvNotFound
+(none)

@@ -655,7 +655,10 @@ class DisasmSwitchResolver:
         if op.type == ida_ua.o_imm:
             return op.value
         if op.type == ida_ua.o_reg:
-            return state["regs"].get(self._norm_reg(op.reg))
+            norm_reg = self._norm_reg(op.reg)
+            if norm_reg == "r8":
+                return CaseExpr(REG_R8, 0)
+            return state["regs"].get(norm_reg)
         return None
 
     def _norm_reg(self, reg):
@@ -1161,6 +1164,14 @@ class SignatureResolver:
         if type(sig) == str:
             _sig = sig
         elif type(sig) == dict:
+            if sig.get("Resolver") == "SwitchDispatcher":
+                address = self.resolve_switch_dispatcher(sig)
+                if address == idc.BADADDR:
+                    print(f"SwitchDispatcher {name} Not Found")
+                    errors["SigNotFound"].append(name)
+                    return None
+                return address
+
             if "Signature" in sig:
                 if isinstance(sig["Signature"], dict):
                     if self.region == "Global" and "Global" in sig["Signature"]:
@@ -1171,6 +1182,9 @@ class SignatureResolver:
                         _sig = sig["Signature"]["KR"]
                 else:
                     _sig = sig["Signature"]
+
+                if isinstance(_sig, dict):
+                    return self.resolve_entry(_sig, name)
 
             if _sig is None:
                 if self.region == "Global" and "Global" in sig:
@@ -1208,6 +1222,64 @@ class SignatureResolver:
         if cache_key not in self._address_cache:
             self._address_cache[cache_key] = find_pattern(pattern, times)
         return self._address_cache[cache_key]
+
+    def resolve_switch_dispatcher(self, sig):
+        sizes = frozenset(int(size) for size in sig.get("Sizes", []))
+        if not sizes:
+            return idc.BADADDR
+        max_size = int(sig.get("MaxSize", 0x200))
+        cache_key = ("SwitchDispatcher", sizes, max_size)
+        if cache_key not in self._address_cache:
+            self._address_cache[cache_key] = self.find_switch_dispatcher(sizes, max_size)
+        return self._address_cache[cache_key]
+
+    def find_switch_dispatcher(self, sizes, max_size):
+        candidates = []
+        for start in idautils.Functions(min_text_ea, max_text_ea):
+            func = ida_funcs.get_func(start)
+            if not func or func.end_ea - func.start_ea > max_size:
+                continue
+            written_sizes, has_r8_input, call_count = self.switch_dispatcher_stats(func)
+            if written_sizes == sizes and has_r8_input and call_count >= len(sizes):
+                candidates.append(func.start_ea)
+
+        if len(candidates) == 1:
+            return candidates[0]
+        if candidates:
+            print(
+                "SwitchDispatcher ambiguous for sizes "
+                f"{sorted(sizes)}: {', '.join(hex(ea) for ea in candidates)}"
+            )
+        return idc.BADADDR
+
+    def switch_dispatcher_stats(self, func):
+        written_sizes = set()
+        has_r8_input = False
+        call_count = 0
+        for ea in idautils.FuncItems(func.start_ea):
+            insn = ida_ua.insn_t()
+            if ida_ua.decode_insn(insn, ea) <= 0:
+                continue
+            op0 = insn.ops[0]
+            op1 = insn.ops[1]
+            if self._is_reg_reg(insn, ida_allins.NN_movzx, REG_R8):
+                has_r8_input = True
+            elif insn.itype == ida_allins.NN_mov and op0.type == ida_ua.o_displ:
+                if op0.phrase == REG_RSP and op1.type == ida_ua.o_imm:
+                    written_sizes.add(op1.value)
+            elif insn.itype in CALL_TYPES:
+                call_count += 1
+        return frozenset(written_sizes), has_r8_input, call_count
+
+    def _is_reg_reg(self, insn, itype, src_reg):
+        op0 = insn.ops[0]
+        op1 = insn.ops[1]
+        return (
+            insn.itype == itype
+            and op0.type == ida_ua.o_reg
+            and op1.type == ida_ua.o_reg
+            and op1.reg == src_reg
+        )
 
 
 class ConfigReader:
@@ -1342,26 +1414,45 @@ def write_ipcs(paths, serverzone, clientzone):
 def write_lemegeton(paths, serverzone):
     Region_Name="EN/DE/FR/JP" if Region=="Global" else Region
 
-    lemegeton_opcodes=f"""		<Region Name="{Region_Name}" Version="{BuildID}.0000.0000">
-			<Opcodes>
-				<Opcode Name="StatusEffectList" Id="{serverzone.content["StatusEffectList"]}" />
-				<Opcode Name="StatusEffectList2" Id="{serverzone.content["StatusEffectList2"]}" />
-				<Opcode Name="StatusEffectList3" Id="{serverzone.content["StatusEffectList3"]}" />
-				<Opcode Name="Ability1" Id="{serverzone.content["Effect"]}" />
-				<Opcode Name="Ability8" Id="{serverzone.content["AoeEffect8"]}" />
-				<Opcode Name="Ability16" Id="{serverzone.content["AoeEffect16"]}" />
-				<Opcode Name="Ability24" Id="{serverzone.content["AoeEffect24"]}" />
-				<Opcode Name="Ability32" Id="{serverzone.content["AoeEffect32"]}" />
-				<Opcode Name="ActorCast" Id="{serverzone.content["ActorCast"]}" />
-				<Opcode Name="EffectResult" Id="{serverzone.content["EffectResult"]}" />
-				<Opcode Name="ActorControl" Id="{serverzone.content["ActorControl"]}" />
-				<Opcode Name="ActorControlSelf" Id="{serverzone.content["ActorControlSelf"]}" />
-				<Opcode Name="ActorControlTarget" Id="{serverzone.content["ActorControlTarget"]}" />
-				<Opcode Name="MapEffect" Id="{serverzone.content["MapEffect"]}" />
-				<Opcode Name="EventPlay" Id="{serverzone.content["EventPlay"]}" />
-				<Opcode Name="EventPlay64" Id="{serverzone.content["EventPlay64"]}" />
-			</Opcodes>
-		</Region>"""
+    opcode_names = [
+        ("StatusEffectList", "StatusEffectList"),
+        ("StatusEffectList2", "StatusEffectList2"),
+        ("StatusEffectList3", "StatusEffectList3"),
+        ("Ability1", "Effect"),
+        ("Ability8", "AoeEffect8"),
+        ("Ability16", "AoeEffect16"),
+        ("Ability24", "AoeEffect24"),
+        ("Ability32", "AoeEffect32"),
+        ("ActorCast", "ActorCast"),
+        ("EffectResult", "EffectResult"),
+        ("ActorControl", "ActorControl"),
+        ("ActorControlSelf", "ActorControlSelf"),
+        ("ActorControlTarget", "ActorControlTarget"),
+        ("MapEffect", "MapEffect"),
+        ("EventPlay", "EventPlay"),
+        ("EventPlay64", "EventPlay64"),
+    ]
+    opcode_lines = []
+    missing = []
+    for output_name, source_name in opcode_names:
+        opcode = serverzone.content.get(source_name)
+        if opcode is None:
+            missing.append(source_name)
+            continue
+        opcode_lines.append(f'\t\t\t\t<Opcode Name="{output_name}" Id="{opcode}" />')
+
+    if missing:
+        print(f"Skipping missing lemegeton opcodes: {', '.join(missing)}")
+
+    lemegeton_opcodes = "\n".join(
+        [
+            f'\t\t<Region Name="{Region_Name}" Version="{BuildID}.0000.0000">',
+            "\t\t\t<Opcodes>",
+            *opcode_lines,
+            "\t\t\t</Opcodes>",
+            "\t\t</Region>",
+        ]
+    )
     with open(paths["lemegeton"], "w+") as f:
         f.write(lemegeton_opcodes)
     print(f'Gen lemegeton_bludprint.xml on {paths["lemegeton"],}')
