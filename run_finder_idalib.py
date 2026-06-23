@@ -6,7 +6,7 @@ from pathlib import Path
 import idapro
 
 
-DEFAULT_TARGET = r"E:\Projects\FFXIVNETOP\FFXIV_BIN\ffxiv_dx11_7.51.exe"
+DEFAULT_TARGET = r"E:\Projects\FFXIVNETOP\FFXIV_BIN\ffxiv_dx11_7.51h2.exe"
 DEFAULT_SCRIPT = Path(__file__).with_name("ffxiv_opcode_finder.py")
 
 
